@@ -1,0 +1,136 @@
+#include "participant.h"
+#include "recorder.h"
+
+
+int Participant::open()
+{
+    // ACE_DEBUG((LM_DEBUG, "注册READ事件处理器!!!!!!!!!!!\n"));
+    return this->reactor ()->register_handler(this, ACE_Event_Handler::READ_MASK);
+}
+
+int Participant::handle_input(ACE_HANDLE handle)
+{
+    char buf[MAX_BUF_LEN];
+    ssize_t rev = socket().recv(buf, sizeof(buf));
+    if(rev <= 0)
+    {
+        ACE_ERROR_RETURN((LM_ERROR, "%p\n", "sock_.recv()"), -1);
+    }
+    printf("receive buffer length: %ld\n",sizeof(buf));
+    std::string buffer(buf,rev);
+    //printf("%s", request.c_str());
+    if(0 != hub_.ProcessRequest(buffer))
+    {
+        ACE_ERROR_RETURN((LM_ERROR, "%p\n", "hub_.ProcessRequest()"), -1);
+    }
+    
+    return 0;
+}
+
+// int Participant::handle_input(ACE_HANDLE handle)
+// {
+//     //ACE_DEBUG((LM_DEBUG, ACE_TEXT("Participant::handle_input()被调用..\n")));
+    
+//     char buf[BUF_LEN_];
+//     ssize_t rev = socket().recv(buf, sizeof(buf));
+//     if(rev <= 0)
+//     {
+//         ACE_ERROR_RETURN((LM_ERROR, "%p\n", "sock_.recv()"), -1);
+//     }
+//     if(rev < BUF_LEN_){
+//         buf[rev] = '\0';
+//         printf("INFO recvlen: %lu, recv: %s\n",strlen(buf), buf);
+//     }
+
+//     //const char record_begin[9] = ;
+//     if (true == on_pcm_)
+//     {
+//         assert(false == on_websocket_);
+//         printf("INFO receving pcm data...%d \n", buf_idx_);
+//         memcpy(pcm_buf_[buf_idx_++], buf, rev);
+//         last_rev_ = rev;
+//     }
+//     else if (true == on_websocket_)
+//     {
+//         assert(false == on_pcm_);
+//         printf("INFO receving websocket data...\n");
+//     }
+//     else{
+//         char str[PROTOCOL_POS+1];
+//         strncpy(str, buf, PROTOCOL_POS);
+
+//         str[PROTOCOL_POS+1] = '\0';
+//         printf("str is %s\n", str);
+//         if (0 == strcmp(str, "suuiduuid"))
+//         {
+//             printf("开始录音，收到配置信息\n");
+//             on_pcm_ = true;
+//         }
+//         else if(0  == strcmp(str, "euuiduuid"))
+//         {
+//             printf("结束录音\n");
+//             on_pcm_ = false;
+//         }
+//         else
+//         {
+//             printf("使用websocket或者http服务\n");
+//             on_websocket_  = true;
+//         }
+//     }
+
+//     //ACE_DEBUG((LM_DEBUG, ACE_TEXT("收到..\n")));
+//     //printf("%s", buf);
+//     //ACE_DEBUG((LM_DEBUG, ACE_TEXT(buf)));
+//     //ACE_DEBUG((LM_DEBUG, ACE_TEXT("\n")));
+//     //sock_.send(buf,strlen(buf));
+//     // ACE_DEBUG((LM_DEBUG, ACE_TEXT("收到..%C",buf)));
+    
+//     //ACE_DEBUG((LM_DEBUG, ACE_TEXT("%s", buf)));
+//     // 这里，需要把数据往队列 或者流水线里push，等待record把数据拼接成.pcm
+
+//     return 0;
+// }
+
+
+// int Participant::SavePcmFile()
+// {
+//     ACE_DEBUG((LM_DEBUG, ACE_TEXT("Participant::storePcmData()被调用..\n")));
+//     if (buf_idx_ < 1) return -1;
+
+//     ofstream file;
+//     file.open("./test.pcm", ios::binary | ios::out | ios::app);
+//     for (unsigned int i = 0; i < buf_idx_-2; ++i){
+//         for(unsigned int j = 0; j < MAX_BUF_LEN; ++j)
+//         {
+//             file << pcm_buf_[i][j];
+//         }
+//     }
+//     // last receive line
+//     for (unsigned int j = 0; j < last_rev_; ++j)
+//     {
+//         file << pcm_buf_[buf_idx_-1][j];
+//     }
+
+//     file.close();
+//     return 0;
+// }
+int Participant::handle_close(ACE_HANDLE handle, ACE_Reactor_Mask close_mask)
+{
+    ACE_DEBUG((LM_DEBUG, ACE_TEXT("Participant::handle_close()被调用..\n")));
+
+    // SavePcmFile();
+    // const std::string pcm_data= hub_.get_all_pcm_data_();
+    // hub_.get_recorder_().SavePcmFile(pcm_data);
+    hub_.SavePcmFile();
+
+    if(sock_.get_handle() != ACE_INVALID_HANDLE)
+    {
+        // remove all events, close stream, delete this pointer
+        ACE_Reactor_Mask m = ACE_Event_Handler::READ_MASK | ACE_Event_Handler::DONT_CALL;
+        reactor()->remove_handler(this, m);
+        sock_.close();
+        delete this;
+    }
+    return 0;
+}
+
