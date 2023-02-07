@@ -1,5 +1,7 @@
-#include "participant_acceptor.h"
-#include "participant.h"
+#include "ace_socket/participant_acceptor.h"
+#include "ace_socket/participant.h"
+
+namespace wenet{
 
 ParticipantAcceptor::~ParticipantAcceptor(){
     handle_close(ACE_INVALID_HANDLE, 0);
@@ -12,25 +14,42 @@ int ParticipantAcceptor::open (const ACE_INET_Addr &listen_addr)
         printf("open port fail\n");
         return -1;
     }
-    //注册接受连接回调事件
+    ACE_DEBUG((LM_DEBUG, ACE_TEXT("register accept event handler...\n")));
     return this->reactor ()->register_handler(this, ACE_Event_Handler::ACCEPT_MASK);
 }
 
 int ParticipantAcceptor::handle_input (ACE_HANDLE fd )
 {
-    printf("ParticipantAcceptor::handle_input()被调用..\n");
-    Participant *client = new Participant();
+    ACE_DEBUG((LM_DEBUG, ACE_TEXT("ParticipantAcceptor::handle_input() be called.\n")));
+    Participant *client = new Participant(feature_config_, decode_config_, decode_resource_);
+    // client->pass_configs(feature_config_, decode_config_, decode_resource_);
+    // 此处堆内存需要释放
     //auto_ptr<ClientService> p (client);
+    ACE_DEBUG((LM_DEBUG, ACE_TEXT("ParticipantAcceptor::handle_input()000000 be called.\n")));
+    // std::shared_ptr<Participant> client(new Participant(feature_config_, decode_config_, decode_resource_));
 
     if (this->acceptor_.accept (client->socket ()) == -1)
     {
         printf("accept client fail\n");
         return -1;
     }
+    ACE_DEBUG((LM_DEBUG, ACE_TEXT("ParticipantAcceptor::handle_input()111111 be called.\n")));
     //p.release ();
     client->reactor (this->reactor ());
     if (client->open () == -1)
+    {
         client->handle_close (ACE_INVALID_HANDLE, 0);
+    }
+
+    // if (!feature_config_)
+    // {
+    //     ACE_DEBUG((LM_DEBUG, ACE_TEXT("feature_config_ pointer error.\n"), feature_config_));
+    // }
+    // ACE_DEBUG((LM_DEBUG, ACE_TEXT("ParticipantAcceptor::handle_input() feature_config_ use_count%d.\n"), feature_config_.use_count()));
+    // ACE_DEBUG((LM_DEBUG, ACE_TEXT("ParticipantAcceptor::handle_input() feature_config_ decode_config_%d.\n"), feature_config_.use_count()));
+    // ACE_DEBUG((LM_DEBUG, ACE_TEXT("ParticipantAcceptor::handle_input() feature_config_ decode_resource_%d.\n"), feature_config_.use_count()));
+
+    ACE_DEBUG((LM_DEBUG, ACE_TEXT("ParticipantAcceptor::handle_input()2222222 be called.\n")));
     return 0;
 }
 // int ParticipantAcceptor::handle_input(ACE_HANDLE fd){
@@ -76,3 +95,17 @@ int ParticipantAcceptor::handle_close(ACE_HANDLE handle, ACE_Reactor_Mask m){
     return 0;
 
 }
+
+// void ParticipantAcceptor::pass_configs(std::shared_ptr<FeaturePipelineConfig> feature_config,
+//                                 std::shared_ptr<DecodeOptions> decode_config,
+//                                 std::shared_ptr<DecodeResource> decode_resource)
+// {
+//     feature_config_ = std::move(feature_config);
+//     decode_config_ = std::move(decode_config);
+//     decode_resource_= std::move(decode_resource);
+//     ACE_DEBUG((LM_DEBUG, ACE_TEXT("ParticipantAcceptor::pass_configs feature_config_ use_count%d.\n"), feature_config_.use_count()));
+//     ACE_DEBUG((LM_DEBUG, ACE_TEXT("ParticipantAcceptor::pass_configs feature_config_ decode_config_%d.\n"), feature_config_.use_count()));
+//     ACE_DEBUG((LM_DEBUG, ACE_TEXT("ParticipantAcceptor::pass_configs feature_config_ decode_resource_%d.\n"), feature_config_.use_count()));
+// }
+
+} // namespace wenet

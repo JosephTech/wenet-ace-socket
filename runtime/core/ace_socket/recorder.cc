@@ -1,4 +1,6 @@
-#include "recorder.h"
+#include "ace_socket/recorder.h"
+
+namespace wenet{
 
 int Recorder::SavePcmFile(const std::string& all_pcm_data)
 {    
@@ -24,3 +26,5 @@ int Recorder::SavePcmFile(const std::string& all_pcm_data)
 
     return 0;
 }
+
+} // namespace wenet

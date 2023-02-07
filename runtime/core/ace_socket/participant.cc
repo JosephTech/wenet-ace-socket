@@ -1,9 +1,14 @@
-#include "participant.h"
-#include "recorder.h"
+#include "ace_socket/participant.h"
+#include "ace_socket/recorder.h"
 
+namespace wenet{
 
 int Participant::open()
 {
+    hub_ = new ProtocolHub(feature_config_, decode_config_, decode_resource_);
+    // ACE_DEBUG((LM_DEBUG, ACE_TEXT("Participant::open() feature_config_ use_count%d.\n"), feature_config_.use_count()));
+    // ACE_DEBUG((LM_DEBUG, ACE_TEXT("Participant::open() feature_config_ decode_config_%d.\n"), feature_config_.use_count()));
+    // ACE_DEBUG((LM_DEBUG, ACE_TEXT("Participant::open() feature_config_ decode_resource_%d.\n"), feature_config_.use_count()));
     // ACE_DEBUG((LM_DEBUG, "注册READ事件处理器!!!!!!!!!!!\n"));
     return this->reactor ()->register_handler(this, ACE_Event_Handler::READ_MASK);
 }
@@ -16,13 +21,18 @@ int Participant::handle_input(ACE_HANDLE handle)
     {
         ACE_ERROR_RETURN((LM_ERROR, "%p\n", "sock_.recv()"), -1);
     }
-    printf("receive buffer length: %ld\n",sizeof(buf));
-    std::string buffer(buf,rev);
-    //printf("%s", request.c_str());
-    if(0 != hub_.ProcessRequest(buffer))
+    //printf("receive buffer length: %ld\n",sizeof(buf));
+    if(hub_ && 0 != hub_->ProcessRequest(buf, rev))
     {
         ACE_ERROR_RETURN((LM_ERROR, "%p\n", "hub_.ProcessRequest()"), -1);
     }
+    // std::string buffer(buf,rev);
+    //printf("%s", request.c_str());
+    // if(hub_ && 0 != hub_->ProcessRequest(buffer))
+    // {
+    //     ACE_ERROR_RETURN((LM_ERROR, "%p\n", "hub_.ProcessRequest()"), -1);
+    // }
+    
     
     return 0;
 }
@@ -121,7 +131,7 @@ int Participant::handle_close(ACE_HANDLE handle, ACE_Reactor_Mask close_mask)
     // SavePcmFile();
     // const std::string pcm_data= hub_.get_all_pcm_data_();
     // hub_.get_recorder_().SavePcmFile(pcm_data);
-    hub_.SavePcmFile();
+    if(hub_) hub_->SavePcmFile();
 
     if(sock_.get_handle() != ACE_INVALID_HANDLE)
     {
@@ -133,4 +143,18 @@ int Participant::handle_close(ACE_HANDLE handle, ACE_Reactor_Mask close_mask)
     }
     return 0;
 }
+
+// void Participant::pass_configs(std::shared_ptr<FeaturePipelineConfig> feature_config,
+//                                 std::shared_ptr<DecodeOptions> decode_config,
+//                                 std::shared_ptr<DecodeResource> decode_resource)
+// {
+//     feature_config_ = std::move(feature_config);
+//     decode_config_ = std::move(decode_config);
+//     decode_resource_= std::move(decode_resource);
+//     ACE_DEBUG((LM_DEBUG, ACE_TEXT("Participant::pass_configs feature_config_ use_count%d.\n"), feature_config_.use_count()));
+//     ACE_DEBUG((LM_DEBUG, ACE_TEXT("Participant::pass_configs feature_config_ decode_config_%d.\n"), feature_config_.use_count()));
+//     ACE_DEBUG((LM_DEBUG, ACE_TEXT("Participant::pass_configs feature_config_ decode_resource_%d.\n"), feature_config_.use_count()));
+// }
+
+} // namespace wenet
 
