@@ -16,6 +16,11 @@ if(WEBSOCKET)
   target_link_libraries(websocket_server_main PUBLIC websocket)
 endif()
 
+if(ACE_SOCKET)
+  add_executable(ace_socket_server_main ace_socket_server_main.cc)
+  target_link_libraries(ace_socket_server_main PUBLIC ace_socket)
+endif()
+
 if(GRPC)
   add_executable(grpc_server_main grpc_server_main.cc)
   target_link_libraries(grpc_server_main PUBLIC wenet_grpc)
