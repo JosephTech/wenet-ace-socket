@@ -3,42 +3,73 @@
 
 #include <string>
 #include <map>
+#include <memory>
 
 // #include "ace_socket/protocol_hub.h"
 #include "utils/log.h"
 
 namespace wenet{
 
+enum ConnectionState
+{    
+    kOnFirstTimeConnect,                // http header or socket protocol data with start signal and configs.
+    kOnPcmData,                         // receive socket end signal or websocket end signal or continue put pcm data into feature_pipeline_ queue.
+    kOnHttpRequest,                     // whether http request or need update to websocket protocol.
+    kOnWebSocket,                       // receive pcm data or start signal and configs.
+    kOnWaitResult,                      // waitting decode result.
+    // kOnWaitSocketResult,             // waitting socket decode result，can't receive new request until SocketResultSent event.
+    // kOnWaitWebsocketResult,          // watiting websocket decode result, can't receive new request until WebsocketResultSent event.
+    // kOnIdle,                         // keep socket/websocket connection, wait for the next speech.
+};
+
 class ProtocolHub;
 
+//
+//  hub at different has different behavior to process data.
+//
 class HubState{
 public:
     virtual ~HubState(){}
-    virtual void Enter(ProtocolHub* ph, const std::string& buffer) = 0;
-    virtual void Execute(ProtocolHub* ph, const std::string& buffer) = 0;
-    virtual void Exit(ProtocolHub* ph) = 0;
+    virtual void Enter(const std::string& buffer) = 0;          // process last buffer at the previous state
+    virtual void Execute(const std::string& buffer) = 0;        // handle_input()
+    virtual void Exit() = 0;
+    virtual ConnectionState get_hub_state_() = 0;
 
 private:
-    
 };
 
 class FirstTimeConnect: public HubState{
 public:
-    FirstTimeConnect() = default;
+    // FirstTimeConnect() = default;
+    FirstTimeConnect(ProtocolHub* ph):protocol_hub_(ph){}
     ~FirstTimeConnect(){}
-    void Enter(ProtocolHub* ph, const std::string& buffer);
-    void Execute(ProtocolHub* ph, const std::string& buffer);
-    void Exit(ProtocolHub* ph);
+    void Enter(const std::string& buffer);
+    void Execute(const std::string& buffer);
+    void Exit();
+    ConnectionState get_hub_state_(){return kOnFirstTimeConnect;}
+    // void PassConfigs(std::shared_ptr<FeaturePipelineConfig> feature_config,
+    //                     std::shared_ptr<DecodeOptions> decode_config,
+    //                     std::shared_ptr<DecodeResource> decode_resource);
+    // void OnSpeechStart(const std::string& config);
+private:
+    ProtocolHub* protocol_hub_;
+    // std::shared_ptr<FeaturePipelineConfig> feature_config_;
+    // std::shared_ptr<DecodeOptions> decode_config_;
+    // std::shared_ptr<DecodeResource> decode_resource_;
 };
 
 
 class OnPcmData: public HubState{
 public:
-    OnPcmData() = default;
+    // OnPcmData() = default;
+    OnPcmData(ProtocolHub* ph):protocol_hub_(ph){}
     ~OnPcmData(){}
-    void Enter(ProtocolHub* ph, const std::string& buffer);
-    void Execute(ProtocolHub* ph, const std::string& buffer);
-    void Exit(ProtocolHub* ph);
+    void Enter(const std::string& buffer);
+    void Execute(const std::string& buffer);
+    void Exit();
+    ConnectionState get_hub_state_(){return kOnPcmData;};
+private:
+    ProtocolHub* protocol_hub_;
 };
 
 struct RequestHttp{
@@ -56,14 +87,31 @@ struct RequestHttp{
 
 class OnHttpRequest: public HubState{
 public:
-    OnHttpRequest() = default;
+    // OnHttpRequest() = default;
+    OnHttpRequest(ProtocolHub* ph):protocol_hub_(ph){}
     ~OnHttpRequest(){}
-    void Enter(ProtocolHub* ph, const std::string& buffer);
-    void Execute(ProtocolHub* ph, const std::string& buffer);
-    void Exit(ProtocolHub* ph);
+    void Enter(const std::string& buffer){}
+    void Execute(const std::string& buffer){}
+    void Exit(){}
+    ConnectionState get_hub_state_(){return kOnHttpRequest;};
     RequestHttp ParseHttpRequest(std::string& buffer);
 private:
+    ProtocolHub* protocol_hub_;
 };
+
+class OnWaitResult: public HubState{
+public:
+    // OnPcmData() = default;
+    OnWaitResult(ProtocolHub* ph):protocol_hub_(ph){}
+    ~OnWaitResult(){}
+    void Enter(const std::string& buffer){}
+    void Execute(const std::string& buffer){}
+    void Exit(){}
+    ConnectionState get_hub_state_(){return kOnWaitResult;};
+private:
+    ProtocolHub* protocol_hub_;
+};
+
 
 
 } // namespace wenet

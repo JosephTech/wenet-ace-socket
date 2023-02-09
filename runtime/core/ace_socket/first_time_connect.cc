@@ -3,13 +3,13 @@
 
 namespace wenet{
 
-void FirstTimeConnect::Enter(ProtocolHub* ph, const std::string& buffer)
+void FirstTimeConnect::Enter(const std::string& buffer)
 {
     return;
 
 }
 
-void FirstTimeConnect::Execute(ProtocolHub* ph, const std::string& buffer)
+void FirstTimeConnect::Execute(const std::string& buffer)
 {
     PLOG(INFO) << "FirstTimeConnect::execute()";
     // 
@@ -21,8 +21,8 @@ void FirstTimeConnect::Execute(ProtocolHub* ph, const std::string& buffer)
         // ph->on_socket_ = true;
         // ph->connection_state_ = kOnPcmData;
         string config = buffer.substr(9);
-        ph->set_on_socket_(true);
-        ph->OnSpeechStart(config);
+        protocol_hub_->set_on_socket_(true);
+        protocol_hub_->OnSpeechStart(config);
     }
     else
     {
@@ -35,9 +35,34 @@ void FirstTimeConnect::Execute(ProtocolHub* ph, const std::string& buffer)
 }
 
 
-void FirstTimeConnect::Exit(ProtocolHub* ph)
+void FirstTimeConnect::Exit()
 {
     return;
 }
+
+// void FirstTimeConnect::OnSpeechStart(const std::string& config)
+// {
+//     PLOG(INFO) << "todo:  ProtocolHub::OnSpeechStart()此处需向客户端发送开始信息\n";
+//     PLOG(INFO) << "todo: ProtocolHub::OnSpeechStart()此处需解析客户端配置信息\n";
+//     PLOG(INFO) << "配置json is: " << config;
+
+//     protocol_hub_->get_feature_pipeline_() = std::make_shared<FeaturePipeline>(*feature_config_);
+//     decoder_ = std::make_shared<AsrDecoder>(protocol_hub_->get_feature_pipeline_(), decode_resource_, *decode_config_);
+//     // on_socket_ = true;
+//     // protocol_hub_->get_hub_state_() = on_pcm_data_state_;
+//     protocol_hub_->ChangeHubState(kOnPcmData, config);
+//     protocol_hub_->RunDecodeThread();
+//     PLOG(INFO) << "todo:  ProtocolHub::OnSpeechStart()此处需join()线程\n";
+//     // decode_thread_ = std::make_shared<std::thread>(&ProtocolHub::DecodeThreadFunc, protocol_hub_);
+// }
+
+// void FirstTimeConnect::PassConfigs(std::shared_ptr<FeaturePipelineConfig> feature_config,
+//                                     std::shared_ptr<DecodeOptions> decode_config,
+//                                     std::shared_ptr<DecodeResource> decode_resource)
+// {
+//     feature_config_ = std::move(feature_config);
+//     decode_config_ = std::move(decode_config);
+//     decode_resource_ = std::move(decode_resource);
+// }
 
 } // namespace wenet

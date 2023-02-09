@@ -137,13 +137,23 @@ int Participant::handle_close(ACE_HANDLE handle, ACE_Reactor_Mask close_mask)
     // SavePcmFile();
     // const std::string pcm_data= hub_.get_all_pcm_data_();
     // hub_.get_recorder_().SavePcmFile(pcm_data);
+    
+    PLOG(INFO) << "对端关闭，join等待解码结果，坚决不能让程序崩溃";
     if (hub_)
     {
         PLOG(INFO) << "发送结束信号";
-        hub_->OnSpeechEnd();
-        if(hub_->get_decode_thread_()) hub_->get_decode_thread_()->join();
+        PLOG(INFO) << "可能已经发送过了";
+        // hub_->OnSpeechEnd();
+        if(hub_ && hub_->get_hub_state_()->get_hub_state_() == kOnPcmData)
+        {
+            PLOG(INFO) << "对端突然关闭";
+            hub_->HandleClose();
+        }
+        if(hub_->get_decode_thread_())
+        {
+            hub_->get_decode_thread_()->join();
+        }
     }
-    PLOG(INFO) << "对端关闭的时候，join等待解码结果，坚决不能让程序崩溃";
     // if(hub_ && hub_->get_record_pcm_()) hub_->SavePcmFile();
 
     if(sock_.get_handle() != ACE_INVALID_HANDLE)

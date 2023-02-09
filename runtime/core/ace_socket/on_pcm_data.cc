@@ -3,25 +3,29 @@
 
 namespace wenet{
 
-void OnPcmData::Enter(ProtocolHub* ph, const std::string& buffer)
+void OnPcmData::Enter(const std::string& buffer)
 {
     return;
 }
-void OnPcmData::Execute(ProtocolHub* ph, const std::string& buffer)
+void OnPcmData::Execute(const std::string& buffer)
 {
-    PLOG(INFO) << "TODO: OnPcmData::Execute() be called";
-    if(ph->get_on_socket_())
+    //PLOG(INFO) << "TODO: OnPcmData::Execute() be called";
+    if(protocol_hub_->get_on_socket_())
     {
+        // socket pcm
         std::string head = buffer.substr(0, 9);
         if(head == "euuiduuid")
         {
-            PLOG(INFO) << "socket结束录音 发送等待解码完成，发送result到客户端\n";
-            ph->get_decode_thread_()->join();
+            PLOG(INFO) << "OnPcmData::Execute() socket结束录音,向decoder发送停止信号, 发送等待解码完成，发送result到客户端\n";
+            // protocol_hub_->OnSpeechEnd();
+            protocol_hub_->HandleClose();
+            PLOG(INFO) << "在handle_close()时候,join()线程";
+            // protocol_hub_->get_decode_thread_()->join();
         }
         int num_samples = buffer.length() / sizeof(int16_t);
         const int16_t* pcm_data = reinterpret_cast<const int16_t*>(buffer.data());
-        PLOG(INFO) << "Put pcm data into queue.";
-        ph->get_feature_pipeline_()->AcceptWaveform(pcm_data, num_samples);
+        //PLOG(INFO) << "Put pcm data into queue.";
+        protocol_hub_->get_feature_pipeline_()->AcceptWaveform(pcm_data, num_samples);
 // void ProtocolHub::OnSpeechData(const string& buffer)
 //  {
 //     int num_samples = buffer.length() / sizeof(int16_t);
@@ -32,13 +36,15 @@ void OnPcmData::Execute(ProtocolHub* ph, const std::string& buffer)
 //     feature_pipeline_->AcceptWaveform(pcm_data, num_samples);
 //  }
     }
-    else
+    else if (protocol_hub_->get_on_websocket_())
     {
-        PLOG(INFO) << "TODO: 是websocket, 等待pcm数据 或结束信号, 切换到wait状态";
+        // websocket pcm
+        PLOG(INFO) << "websocket pcm也 有可能是websocket结束信号";
+
     }
     return;
 }
-void OnPcmData::Exit(ProtocolHub* ph)
+void OnPcmData::Exit()
 {
     return;
 }

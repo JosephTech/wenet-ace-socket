@@ -14,8 +14,8 @@
 
 #include "utils/log.h"
 
-#include "frontend/feature_pipeline.h"
 #include "decoder/asr_decoder.h"
+#include "frontend/feature_pipeline.h"
 
 #include "ace_socket/recorder.h"
 #include "ace_socket/hub_state.h"
@@ -23,17 +23,7 @@
 
 namespace wenet{
     
-// enum CommunicationState
-// {    
-//     kOnFirstTimeConnect,                // http header or socket protocol data with start signal and configs.
-//     kOnPcmData,                         // receive socket end signal or websocket end signal or continue put pcm data into feature_pipeline_ queue.
-//     kOnHttpRequest,                     // whether http request or need update to websocket protocol.
-//     kOnWebSocket,                       // receive pcm data or start signal and configs.
-//     kOnWaitResult,                      // waitting decode result.
-//     // kOnWaitSocketResult,             // waitting socket decode result，can't receive new request until SocketResultSent event.
-//     // kOnWaitWebsocketResult,          // watiting websocket decode result, can't receive new request until WebsocketResultSent event.
-//     // kOnIdle,                         // keep socket/websocket connection, wait for the next speech.
-// };
+
 
 // class ProtocolHub;  // 前置声明
 
@@ -53,8 +43,14 @@ public:
             decode_resource_(std::move(decode_resource)){
                 // OnSpeechStart("");                
                 // states_machine_[kOnFirstTimeConnect]->enter(this);
-                first_connect_state_ = new FirstTimeConnect();
-                on_pcm_data_state_ = new OnPcmData();
+                first_connect_state_ = new FirstTimeConnect(this);
+                // first_connect_state_->PassConfigs(feature_config_,
+                //                                     decode_config_,
+                //                                     decode_resource_,
+                //                                     decoder_,
+                //                                     decode_thread_);
+                on_pcm_data_state_ = new OnPcmData(this);
+                on_wait_result_state_ = new OnWaitResult(this);
                 // on_http_request_state_ = new OnHttpRequest();
                 hub_state_ = first_connect_state_;
             }
@@ -67,17 +63,28 @@ public:
     int SavePcmFile();
     void OnSpeechData(const string& buffer);
     void OnSpeechStart(const string& config);
-    void OnSpeechEnd();
+    void HandleClose();
+    // void RunDecodeThread();
     void DecodeThreadFunc();
     void OnPartialResult(const std::string& result);
+
+    void ChangeHubState(ConnectionState state, const string& buffer);
     std::string SerializeResult(bool finish);
 
     std::string get_all_pcm_data_();
     bool get_record_pcm_(){return record_pcm_;}
     void set_on_socket_(bool flag){on_socket_ = flag;}
     bool get_on_socket_(){return on_socket_;}
+
+    void set_on_websocket_(bool flag){on_websocket_ = flag;}
+    bool get_on_websocket_(){return on_websocket_;}
+
+    HubState* get_hub_state_(){return hub_state_;}
+
     std::shared_ptr<FeaturePipeline>& get_feature_pipeline_(){return feature_pipeline_;}
     std::shared_ptr<std::thread>& get_decode_thread_(){return decode_thread_;}
+    // std::shared_ptr<DecodeResource>& get_decode_resource_(){return decode_resource_;}
+
 
 
 private:
@@ -104,6 +111,7 @@ private:
     HubState* hub_state_;
     FirstTimeConnect* first_connect_state_;
     OnPcmData* on_pcm_data_state_;
+    OnWaitResult* on_wait_result_state_;
     // OnHttpRequest* on_http_request_state_;
 };
 
