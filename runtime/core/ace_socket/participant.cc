@@ -1,7 +1,13 @@
 #include "ace_socket/participant.h"
 #include "ace_socket/recorder.h"
 
+// #include "ace_socket/protocol_hub.h"
+
 namespace wenet{
+
+Participant::~Participant(){
+        if(hub_) delete hub_;
+    }
 
 int Participant::open()
 {
@@ -131,7 +137,14 @@ int Participant::handle_close(ACE_HANDLE handle, ACE_Reactor_Mask close_mask)
     // SavePcmFile();
     // const std::string pcm_data= hub_.get_all_pcm_data_();
     // hub_.get_recorder_().SavePcmFile(pcm_data);
-    if(hub_) hub_->SavePcmFile();
+    if (hub_)
+    {
+        PLOG(INFO) << "发送结束信号";
+        hub_->OnSpeechEnd();
+        if(hub_->get_decode_thread_()) hub_->get_decode_thread_()->join();
+    }
+    PLOG(INFO) << "对端关闭的时候，join等待解码结果，坚决不能让程序崩溃";
+    // if(hub_ && hub_->get_record_pcm_()) hub_->SavePcmFile();
 
     if(sock_.get_handle() != ACE_INVALID_HANDLE)
     {

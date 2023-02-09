@@ -9,6 +9,7 @@
 #include <sstream>
 
 #include "ace_socket/protocol_hub.h"
+// class ProtocolHub;
 
 #define MAX_BUF_LEN 1024 
 
@@ -23,9 +24,7 @@ public:
             feature_config_(std::move(feature_config)),
             decode_config_(std::move(decode_config)),
             decode_resource_(std::move(decode_resource)){}
-    ~Participant(){
-        if(hub_) delete hub_;
-    }
+    ~Participant();
     
     int open();
     int handle_input(ACE_HANDLE handle = ACE_INVALID_HANDLE);
@@ -36,15 +35,16 @@ public:
     ACE_SOCK_Stream& socket(){return sock_;}
     ACE_HANDLE get_handle () const
         { return sock_.get_handle (); }
+
 // private:
 //     int SavePcmFile();
 private:
     ACE_SOCK_Stream sock_;
-    bool on_pcm_ = true;
-    bool on_websocket_ = false;
-    char pcm_buf_[1024][1024];  // 需限制录制时长
-    int buf_idx_ = 0;
-    int last_rev_ = 0;           // 最后一次收到的pcm数据长度
+    // bool on_pcm_ = true;
+    // bool on_websocket_ = false;
+    // char pcm_buf_[1024][1024];  // 需限制录制时长
+    // int buf_idx_ = 0;
+    // int last_rev_ = 0;           // 最后一次收到的pcm数据长度
 
     std::shared_ptr<FeaturePipelineConfig> feature_config_;
     std::shared_ptr<DecodeOptions> decode_config_;
