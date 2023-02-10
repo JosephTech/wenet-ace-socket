@@ -37,6 +37,8 @@ public:
     ACE_SOCK_Stream& socket(){return sock_;}
     ACE_HANDLE get_handle () const
         { return sock_.get_handle (); }
+    
+    ProtocolHub* get_hub_(){return hub_; }
 
 // private:
 //     int SavePcmFile();

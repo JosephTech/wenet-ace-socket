@@ -132,6 +132,7 @@ int Participant::handle_input(ACE_HANDLE handle)
 // }
 int Participant::handle_close(ACE_HANDLE handle, ACE_Reactor_Mask close_mask)
 {
+    PLOG(INFO) << "需要将自己从Group里边移除，将Group从GroupManager里移除";
     ACE_DEBUG((LM_DEBUG, ACE_TEXT("Participant::handle_close()被调用..\n")));
 
     // SavePcmFile();
@@ -164,6 +165,7 @@ int Participant::handle_close(ACE_HANDLE handle, ACE_Reactor_Mask close_mask)
         sock_.close();
         delete this;
     }
+
     return 0;
 }
 

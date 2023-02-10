@@ -25,7 +25,6 @@ int ParticipantAcceptor::handle_input (ACE_HANDLE fd )
     // client->pass_configs(feature_config_, decode_config_, decode_resource_);
     // 此处堆内存需要释放
     //auto_ptr<ClientService> p (client);
-    ACE_DEBUG((LM_DEBUG, ACE_TEXT("ParticipantAcceptor::handle_input()000000 be called.\n")));
     // std::shared_ptr<Participant> client(new Participant(feature_config_, decode_config_, decode_resource_));
 
     if (this->acceptor_.accept (client->socket ()) == -1)
@@ -33,7 +32,6 @@ int ParticipantAcceptor::handle_input (ACE_HANDLE fd )
         printf("accept client fail\n");
         return -1;
     }
-    ACE_DEBUG((LM_DEBUG, ACE_TEXT("ParticipantAcceptor::handle_input()111111 be called.\n")));
     //p.release ();
     client->reactor (this->reactor ());
     if (client->open () == -1)
@@ -49,7 +47,6 @@ int ParticipantAcceptor::handle_input (ACE_HANDLE fd )
     // ACE_DEBUG((LM_DEBUG, ACE_TEXT("ParticipantAcceptor::handle_input() feature_config_ decode_config_%d.\n"), feature_config_.use_count()));
     // ACE_DEBUG((LM_DEBUG, ACE_TEXT("ParticipantAcceptor::handle_input() feature_config_ decode_resource_%d.\n"), feature_config_.use_count()));
 
-    ACE_DEBUG((LM_DEBUG, ACE_TEXT("ParticipantAcceptor::handle_input()2222222 be called.\n")));
     return 0;
 }
 // int ParticipantAcceptor::handle_input(ACE_HANDLE fd){

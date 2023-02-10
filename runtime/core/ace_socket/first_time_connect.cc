@@ -15,19 +15,24 @@ void FirstTimeConnect::Execute(const std::string& buffer)
     PLOG(INFO) << "FirstTimeConnect::execute()";
     // 
     PLOG(INFO) << "TODO: FirstTimeConnect::execute()不是socket起始信号和配置, 就是http 请求";
-    std::string head = buffer.substr(0, 9);
-    if (head == "suuiduuid")
+    int signal_len = 1+36;
+    std::string head = buffer.substr(0, signal_len);
+
+    string start_signal = "s" + protocol_hub_->get_client_uuid_();
+    PLOG(INFO) << "head is " << head;
+    PLOG(INFO) << "start_signal is " << start_signal;
+    if (head == start_signal)
     {
         // ph->on_socket_ = true;
         // ph->connection_state_ = kOnPcmData;
-        string uuid = "uuiduuid";
+        string uuid = protocol_hub_->get_client_uuid_();
         bool ret = GroupManager::Instance().JoinGroupManager(uuid, protocol_hub_->get_client_());    
         if(!ret)
         {
             PLOG(INFO) << "FirstTimeConnect::Execute(), client join failed";
         }
         PLOG(INFO) << "TODO: FirstTimeConnect::execute()切换为pcm_data状态";
-        string config = buffer.substr(9);
+        string config = buffer.substr(signal_len);
         protocol_hub_->set_on_socket_(true);
         protocol_hub_->OnSpeechStart(config);
     }

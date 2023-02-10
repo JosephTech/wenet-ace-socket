@@ -1,6 +1,7 @@
 
 #include "utils/log.h"
 #include "ace_socket/group.h"
+#include "ace_socket/participant.h"
 
 
 namespace wenet{
@@ -25,7 +26,7 @@ bool GroupManager::JoinGroupManager(string uuid, Participant* pa)
 }
 
 void Group::Join(Participant* client){
-    PLOG(INFO) << "new client join  " << client;
+    PLOG(INFO) << "new client join  " << client->get_hub_()->get_client_uuid_();
     clients_.push_back(client);
 }
 

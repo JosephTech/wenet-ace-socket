@@ -1,11 +1,60 @@
-#include "ace_socket/protocol_hub.h"
 
-#include "boost/json/src.hpp"
+
+#include <boost/json/src.hpp>
+#include <boost/uuid/uuid.hpp>
+#include <boost/uuid/uuid_generators.hpp>
+#include <boost/uuid/uuid_io.hpp>
 #include "utils/log.h"
 
+#include "ace_socket/protocol_hub.h"
+#include "ace_socket/participant.h"
 namespace wenet{
 
 namespace json = boost::json;
+
+ProtocolHub::ProtocolHub(Participant* client,
+                std::shared_ptr<FeaturePipelineConfig> feature_config,
+                std::shared_ptr<DecodeOptions> decode_config,
+                std::shared_ptr<DecodeResource> decode_resource):
+        client_(client),
+        feature_config_(std::move(feature_config)),
+        decode_config_(std::move(decode_config)),
+        decode_resource_(std::move(decode_resource))
+{
+    // OnSpeechStart("");                
+    // states_machine_[kOnFirstTimeConnect]->enter(this);
+    first_connect_state_ = new FirstTimeConnect(this);
+    // first_connect_state_->PassConfigs(feature_config_,
+    //                                     decode_config_,
+    //                                     decode_resource_,
+    //                                     decoder_,
+    //                                     decode_thread_);
+    on_pcm_data_state_ = new OnPcmData(this);
+    on_wait_result_state_ = new OnWaitResult(this);
+    // on_http_request_state_ = new OnHttpRequest();
+    hub_state_ = first_connect_state_;
+
+    boost::uuids::random_generator gen;
+    boost::uuids::uuid id = gen();
+    client_uuid_ = boost::uuids::to_string(id);
+    PLOG(INFO) << "client uuid is " << client_uuid_;
+
+    // 36字节
+    if(-1 == client_->socket().send_n(client_uuid_.c_str(), strlen(client_uuid_.c_str())+1))
+    {
+        client_->handle_close(ACE_INVALID_HANDLE, 0);
+        PLOG(ERROR) << "send uuid fail. close socket stream.";
+    }
+    
+    // boost::uuids::random_generator gen;
+    // for (int i = 0; i < 100; ++i)
+    // {
+    //     boost::uuids::uuid id = gen();
+    // //client_uuid_ = boost::uuids::to_string(id);
+    //     PLOG(INFO) << "client uuid is " << boost::uuids::to_string(id);
+    // }
+    
+}
 
 // int ProtocolHub::ProcessRequest(const std::string& buffer)
 int ProtocolHub::ProcessRequest(const char* buf, ssize_t rev)

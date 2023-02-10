@@ -11,11 +11,12 @@
 #include <unordered_map>
 
 
-
+// #include "boost/uuid/uuid.hpp"
 #include "utils/log.h"
 
 #include "decoder/asr_decoder.h"
 #include "frontend/feature_pipeline.h"
+
 
 #include "ace_socket/recorder.h"
 #include "ace_socket/hub_state.h"
@@ -40,25 +41,7 @@ public:
     ProtocolHub(Participant* client,
                 std::shared_ptr<FeaturePipelineConfig> feature_config,
                 std::shared_ptr<DecodeOptions> decode_config,
-                std::shared_ptr<DecodeResource> decode_resource):
-        client_(client),
-        feature_config_(std::move(feature_config)),
-        decode_config_(std::move(decode_config)),
-        decode_resource_(std::move(decode_resource)){
-            // OnSpeechStart("");                
-            // states_machine_[kOnFirstTimeConnect]->enter(this);
-            first_connect_state_ = new FirstTimeConnect(this);
-            // first_connect_state_->PassConfigs(feature_config_,
-            //                                     decode_config_,
-            //                                     decode_resource_,
-            //                                     decoder_,
-            //                                     decode_thread_);
-            on_pcm_data_state_ = new OnPcmData(this);
-            on_wait_result_state_ = new OnWaitResult(this);
-            // on_http_request_state_ = new OnHttpRequest();
-            hub_state_ = first_connect_state_;
-            
-        }
+                std::shared_ptr<DecodeResource> decode_resource);
 
     ~ProtocolHub(){}
             
@@ -86,6 +69,7 @@ public:
     Participant* get_client_(){return client_;}
 
     HubState* get_hub_state_(){return hub_state_;}
+    std::string& get_client_uuid_(){return client_uuid_;}
 
     std::shared_ptr<FeaturePipeline>& get_feature_pipeline_(){return feature_pipeline_;}
     std::shared_ptr<std::thread>& get_decode_thread_(){return decode_thread_;}
@@ -120,6 +104,9 @@ private:
     OnPcmData* on_pcm_data_state_;
     OnWaitResult* on_wait_result_state_;
     // OnHttpRequest* on_http_request_state_;
+
+    // boost::uuids::uuid client_uuid_;  // 128 bits
+    std::string client_uuid_;
 };
 
 
