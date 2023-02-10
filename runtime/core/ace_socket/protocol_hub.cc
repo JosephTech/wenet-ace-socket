@@ -149,15 +149,15 @@ int ProtocolHub::SavePcmFile()
     return 0;
 }
 
-void ProtocolHub::OnSpeechData(const string& buffer)
-{
-    int num_samples = buffer.length() / sizeof(int16_t);
+// void ProtocolHub::OnSpeechData(const string& buffer)
+// {
+//     int num_samples = buffer.length() / sizeof(int16_t);
 
-    const int16_t* pcm_data = reinterpret_cast<const int16_t*>(buffer.data());
-    //printf("INFO pcm_data is %hd\n", *pcm_data);
+//     const int16_t* pcm_data = reinterpret_cast<const int16_t*>(buffer.data());
+//     //printf("INFO pcm_data is %hd\n", *pcm_data);
 
-    feature_pipeline_->AcceptWaveform(pcm_data, num_samples);
-}
+//     feature_pipeline_->AcceptWaveform(pcm_data, num_samples);
+// }
 
 /*
   params: 配置json
@@ -256,8 +256,9 @@ void ProtocolHub::DecodeThreadFunc()
 
 void ProtocolHub::OnPartialResult(const std::string& result)
 {
-    printf("***********************************************************************识别结果：...\n");
-    LOG(INFO) << "Partial result: " << result;
+    PLOG(INFO) << "此处需要发送识别结果";
+    PLOG(INFO) << "Partial result: " << result;
+    
 }
 
 std::string ProtocolHub::SerializeResult(bool finish) 

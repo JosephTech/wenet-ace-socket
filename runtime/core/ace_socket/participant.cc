@@ -11,7 +11,7 @@ Participant::~Participant(){
 
 int Participant::open()
 {
-    hub_ = new ProtocolHub(feature_config_, decode_config_, decode_resource_);
+    hub_ = new ProtocolHub(this, feature_config_, decode_config_, decode_resource_);
     // ACE_DEBUG((LM_DEBUG, ACE_TEXT("Participant::open() feature_config_ use_count%d.\n"), feature_config_.use_count()));
     // ACE_DEBUG((LM_DEBUG, ACE_TEXT("Participant::open() feature_config_ decode_config_%d.\n"), feature_config_.use_count()));
     // ACE_DEBUG((LM_DEBUG, ACE_TEXT("Participant::open() feature_config_ decode_resource_%d.\n"), feature_config_.use_count()));

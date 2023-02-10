@@ -6,6 +6,7 @@ add_library(ace_socket STATIC
   recorder.cc
   first_time_connect.cc
   on_pcm_data.cc
+  group.cc
 )
 
 target_link_libraries(ace_socket PUBLIC decoder ACE)

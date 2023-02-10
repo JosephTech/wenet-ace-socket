@@ -1,5 +1,6 @@
 #include "ace_socket/hub_state.h"
 #include "ace_socket/protocol_hub.h"
+#include "ace_socket/group.h"
 
 namespace wenet{
 
@@ -17,9 +18,15 @@ void FirstTimeConnect::Execute(const std::string& buffer)
     std::string head = buffer.substr(0, 9);
     if (head == "suuiduuid")
     {
-        PLOG(INFO) << "TODO: FirstTimeConnect::execute()切换为pcm_data状态";
         // ph->on_socket_ = true;
         // ph->connection_state_ = kOnPcmData;
+        string uuid = "uuiduuid";
+        bool ret = GroupManager::Instance().JoinGroupManager(uuid, protocol_hub_->get_client_());    
+        if(!ret)
+        {
+            PLOG(INFO) << "FirstTimeConnect::Execute(), client join failed";
+        }
+        PLOG(INFO) << "TODO: FirstTimeConnect::execute()切换为pcm_data状态";
         string config = buffer.substr(9);
         protocol_hub_->set_on_socket_(true);
         protocol_hub_->OnSpeechStart(config);

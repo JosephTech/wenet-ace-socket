@@ -33,27 +33,32 @@ namespace wenet{
 // class HubState;  // 前置声明
 // class FirstTimeConnect;
 
+class Participant;
+
 class ProtocolHub{
 public:
-    ProtocolHub(std::shared_ptr<FeaturePipelineConfig> feature_config,
-                        std::shared_ptr<DecodeOptions> decode_config,
-                        std::shared_ptr<DecodeResource> decode_resource):
-            feature_config_(std::move(feature_config)),
-            decode_config_(std::move(decode_config)),
-            decode_resource_(std::move(decode_resource)){
-                // OnSpeechStart("");                
-                // states_machine_[kOnFirstTimeConnect]->enter(this);
-                first_connect_state_ = new FirstTimeConnect(this);
-                // first_connect_state_->PassConfigs(feature_config_,
-                //                                     decode_config_,
-                //                                     decode_resource_,
-                //                                     decoder_,
-                //                                     decode_thread_);
-                on_pcm_data_state_ = new OnPcmData(this);
-                on_wait_result_state_ = new OnWaitResult(this);
-                // on_http_request_state_ = new OnHttpRequest();
-                hub_state_ = first_connect_state_;
-            }
+    ProtocolHub(Participant* client,
+                std::shared_ptr<FeaturePipelineConfig> feature_config,
+                std::shared_ptr<DecodeOptions> decode_config,
+                std::shared_ptr<DecodeResource> decode_resource):
+        client_(client),
+        feature_config_(std::move(feature_config)),
+        decode_config_(std::move(decode_config)),
+        decode_resource_(std::move(decode_resource)){
+            // OnSpeechStart("");                
+            // states_machine_[kOnFirstTimeConnect]->enter(this);
+            first_connect_state_ = new FirstTimeConnect(this);
+            // first_connect_state_->PassConfigs(feature_config_,
+            //                                     decode_config_,
+            //                                     decode_resource_,
+            //                                     decoder_,
+            //                                     decode_thread_);
+            on_pcm_data_state_ = new OnPcmData(this);
+            on_wait_result_state_ = new OnWaitResult(this);
+            // on_http_request_state_ = new OnHttpRequest();
+            hub_state_ = first_connect_state_;
+            
+        }
 
     ~ProtocolHub(){}
             
@@ -61,7 +66,7 @@ public:
     int ProcessRespond();
     Recorder& get_recorder_();
     int SavePcmFile();
-    void OnSpeechData(const string& buffer);
+    // void OnSpeechData(const string& buffer);
     void OnSpeechStart(const string& config);
     void HandleClose();
     // void RunDecodeThread();
@@ -78,6 +83,7 @@ public:
 
     void set_on_websocket_(bool flag){on_websocket_ = flag;}
     bool get_on_websocket_(){return on_websocket_;}
+    Participant* get_client_(){return client_;}
 
     HubState* get_hub_state_(){return hub_state_;}
 
@@ -108,6 +114,7 @@ private:
 
     // CommunicationState connection_state_ = kOnFirstTimeConnect;
 
+    Participant* client_;
     HubState* hub_state_;
     FirstTimeConnect* first_connect_state_;
     OnPcmData* on_pcm_data_state_;
