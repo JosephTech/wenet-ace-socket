@@ -211,21 +211,21 @@ int ProtocolHub::SavePcmFile()
 /*
   params: 配置json
   */
-void ProtocolHub::OnSpeechStart(const string& config)
+void ProtocolHub::OnSpeechStart()
 {    
     //LOG(INFO) << "Receive start signal.";
     // std::shared_ptr<FeaturePipelineConfig> feature_config(new FeaturePipelineConfig(80, 16000));
     // feature_config_ = std::move(feature_config);
 
-    PLOG(INFO) << "todo:  ProtocolHub::OnSpeechStart()此处需向客户端发送开始信息\n";
-    PLOG(INFO) << "todo: ProtocolHub::OnSpeechStart()此处需解析客户端配置信息\n";
-    PLOG(INFO) << "配置json is: " << config;
-
+    // PLOG(INFO) << "todo:  ProtocolHub::OnSpeechStart()此处需向客户端发送开始信息\n";
+    // PLOG(INFO) << "todo: ProtocolHub::OnSpeechStart()此处需解析客户端配置信息\n";
+    // PLOG(INFO) << "配置json is: " << config;
+    PLOG(INFO) << "TODO(Joseph):" << "此处须向客户端发送start信息";
     feature_pipeline_ = std::make_shared<FeaturePipeline>(*feature_config_);
     decoder_ = std::make_shared<AsrDecoder>(feature_pipeline_, decode_resource_, *decode_config_);
     // on_socket_ = true;
     hub_state_ = on_pcm_data_state_;
-    PLOG(INFO) << "todo:  ProtocolHub::OnSpeechStart()此处需join()线程\n";
+    PLOG(INFO) << "TODO(Joseph):  ProtocolHub::OnSpeechStart()此处需join()线程\n";
     decode_thread_ = std::make_shared<std::thread>(&ProtocolHub::DecodeThreadFunc, this);
   
 }
@@ -244,22 +244,58 @@ void ProtocolHub::HandleClose()
 //     decode_thread_ = std::make_shared<std::thread>(&ProtocolHub::DecodeThreadFunc, this);
 // }
 
+//
+// from wenet
+//
 void ProtocolHub::DecodeThreadFunc()
 {
-    printf("TODO decode线程启动\n");
-    // try {
+    PLOG(INFO) << "TODO decode线程启动\n";
+    PLOG(INFO) << "TODO(Joseph): 此处需发送解码结果";
+    try {
     while (true) {
-      //printf("TODO decode_线程正在解码..\n");      
       DecodeState state = decoder_->Decode();
-
-      std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-      if (state == DecodeState::kEndpoint  || state == DecodeState::kEndFeats) 
-      {
-          // 检测到端点  所有特征解码结束  
-          decoder_->Rescoring();
-          std::string result = SerializeResult(true);
-          PLOG(INFO) << "结果是:" << result;
+      if (state == DecodeState::kEndFeats) {
+        decoder_->Rescoring();
+        std::string result = SerializeResult(true);
+        OnFinalResult(result);
+        OnFinish();
+        // stop_recognition_ = true;
+        break;
+      } else if (state == DecodeState::kEndpoint) {
+        decoder_->Rescoring();
+        std::string result = SerializeResult(true);
+        OnFinalResult(result);
+        // If it's not continuous decoding, continue to do next recognition
+        // otherwise stop the recognition
+        if (continuous_decoding_) {
+          decoder_->ResetContinuousDecoding();
+        } else {
+          OnFinish();
+        //   stop_recognition_ = true;
           break;
+        }
+      } else {
+        if (decoder_->DecodedSomething()) {
+          std::string result = SerializeResult(false);
+          OnPartialResult(result);
+        }
+      }
+    }
+  } catch (std::exception const& e) {
+    LOG(ERROR) << e.what();
+  }
+    // // try {
+    // while (true) {
+    //   DecodeState state = decoder_->Decode();
+
+    //   std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+    //   if (state == DecodeState::kEndpoint  || state == DecodeState::kEndFeats) 
+    //   {
+    //       // 检测到端点  所有特征解码结束  
+    //       decoder_->Rescoring();
+    //       std::string result = SerializeResult(true);
+    //       PLOG(INFO) << "结果是:" << result;
+    //       break;
           // if (decoder_->DecodedSomething()) {
           //     //std::string result = SerializeResult(false);
           //     std::string result = "";
@@ -269,7 +305,7 @@ void ProtocolHub::DecodeThreadFunc()
           //     }
           //     break;
           // }      
-      }
+    //   }
 
       // if (state == DecodeState::kEndFeats) {
       //   decoder_->Rescoring();
@@ -297,22 +333,44 @@ void ProtocolHub::DecodeThreadFunc()
       //     OnPartialResult(result);
       //   }
       // }
-    }
+    // }
     // } catch (std::exception const& e) {
     //   LOG(ERROR) << e.what();
     // }
 }
 
-void ProtocolHub::OnPartialResult(const std::string& result)
-{
-    PLOG(INFO) << "此处需要发送识别结果";
-    PLOG(INFO) << "Partial result: " << result;
-    
+
+void ProtocolHub::OnPartialResult(const std::string& result) {
+    LOG(INFO) << "Partial result: " << result;
+    PLOG(INFO) << "TODO(Joseph): 此处需发送Partial识别结果";
+    // json::value rv = {
+    //     {"status", "ok"}, {"type", "partial_result"}, {"nbest", result}};
+    // ws_.text(true);
+    // ws_.write(asio::buffer(json::serialize(rv)));
+}
+
+void ProtocolHub::OnFinalResult(const std::string& result) {
+    PLOG(INFO) << "Final result: " << result;
+    // PLOG(INFO) << "n best is " << nbest_;
+    // PLOG(INFO) << "continuous_decoding_ is " << continuous_decoding_;
+    PLOG(INFO) << "TODO(Joseph): 此处需发送final识别结果";
+    //   json::value rv = {
+    //       {"status", "ok"}, {"type", "final_result"}, {"nbest", result}};
+    //   ws_.text(true);
+    //   ws_.write(asio::buffer(json::serialize(rv)));
+}
+
+void ProtocolHub::OnFinish() {
+    PLOG(INFO) << "TODO(Joseph): 此处需发送识别结束信号"; 
+    // Send finish tag
+    // json::value rv = {{"status", "ok"}, {"type", "speech_end"}};
+    // ws_.text(true);
+    // ws_.write(asio::buffer(json::serialize(rv)));
 }
 
 std::string ProtocolHub::SerializeResult(bool finish) 
 {
-    printf("INFO 正在序列化解析结果...\n");
+    PLOG(INFO) << "正在序列化解析结果...\n";
     json::array nbest;
     for (const DecodeResult& path : decoder_->result()) {
         json::object jpath({{"sentence", path.sentence}});

@@ -49,15 +49,23 @@ public:
     int ProcessRespond();
     Recorder& get_recorder_();
     int SavePcmFile();
+
+    
     // void OnSpeechData(const string& buffer);
-    void OnSpeechStart(const string& config);
-    void HandleClose();
     // void RunDecodeThread();
     void DecodeThreadFunc();
+    void OnSpeechStart();
     void OnPartialResult(const std::string& result);
+    void OnFinalResult(const std::string& result);
+    void OnFinish();
+    void HandleClose();
+    
 
     void ChangeHubState(ConnectionState state, const string& buffer);
     std::string SerializeResult(bool finish);
+
+    void set_nbest_(int n){nbest_ = n;}
+    void set_continuous_decoding_(bool flag){continuous_decoding_ = flag;}
 
     std::string get_all_pcm_data_();
     bool get_record_pcm_(){return record_pcm_;}
@@ -83,6 +91,7 @@ private:
     bool record_pcm_ = false;               // whether to save the pcm data.
 
     int nbest_ = 1;
+    bool continuous_decoding_ = false;
     std::string all_pcm_data_;
     Recorder recorder_;
 

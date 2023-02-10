@@ -2,6 +2,7 @@
 #include "ace_socket/protocol_hub.h"
 #include "ace_socket/group.h"
 
+
 namespace wenet{
 
 void FirstTimeConnect::Enter(const std::string& buffer)
@@ -15,26 +16,37 @@ void FirstTimeConnect::Execute(const std::string& buffer)
     PLOG(INFO) << "FirstTimeConnect::execute()";
     // 
     PLOG(INFO) << "TODO: FirstTimeConnect::execute()不是socket起始信号和配置, 就是http 请求";
-    int signal_len = 1+36;
-    std::string head = buffer.substr(0, signal_len);
+    // start_signal: 's' means start, 'e' means end.
+    // n_best: n best.
+    // continuous_decoding: True 1, False 0. for long speech recognition.
+    // uuid: clients with same uuid has the same group.
+    // example: 's'+ '3' + '1'` + "ce25a119-fbe1-4c5b-a2ae-0e68d2477c5c" 
+    int head_len = 3 + 36;
+    int uuid_len = 36;
+    std::string uuid = buffer.substr(3, uuid_len);
+    std::string signal;
+    signal.push_back(buffer[0]);
+    PLOG(INFO) << "uuid is " << uuid;
+    PLOG(INFO) << "signal is " << signal;
 
-    string start_signal = "s" + protocol_hub_->get_client_uuid_();
-    PLOG(INFO) << "head is " << head;
-    PLOG(INFO) << "start_signal is " << start_signal;
-    if (head == start_signal)
+    if (signal == "s" && uuid == protocol_hub_->get_client_uuid_())
     {
         // ph->on_socket_ = true;
         // ph->connection_state_ = kOnPcmData;
-        string uuid = protocol_hub_->get_client_uuid_();
         bool ret = GroupManager::Instance().JoinGroupManager(uuid, protocol_hub_->get_client_());    
         if(!ret)
         {
             PLOG(INFO) << "FirstTimeConnect::Execute(), client join failed";
         }
         PLOG(INFO) << "TODO: FirstTimeConnect::execute()切换为pcm_data状态";
-        string config = buffer.substr(signal_len);
+        
+        protocol_hub_->set_nbest_(int(buffer[1] - '0'));
+        if(buffer[2] == '0' || buffer[2] == '1')
+        {
+            protocol_hub_->set_continuous_decoding_(int(buffer[2] - '0'));
+        }
         protocol_hub_->set_on_socket_(true);
-        protocol_hub_->OnSpeechStart(config);
+        protocol_hub_->OnSpeechStart();
     }
     else
     {
