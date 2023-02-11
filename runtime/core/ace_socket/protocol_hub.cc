@@ -34,6 +34,7 @@ ProtocolHub::ProtocolHub(Participant* client,
     //                                     decode_thread_);
     on_pcm_data_state_ = new OnPcmData(this);
     on_wait_result_state_ = new OnWaitResult(this);
+    on_http_request_state_ = new OnHttpRequest(this);
     // on_http_request_state_ = new OnHttpRequest();
     hub_state_ = first_connect_state_;
 
@@ -421,11 +422,14 @@ void ProtocolHub::ChangeHubState(ConnectionState state, const string& buffer)
 
   switch (state)
   {
-    case kOnPcmData:
+  case kOnPcmData:
       hub_state_ = on_pcm_data_state_;
       break;
-    case kOnWaitResult:
+  case kOnWaitResult:
       hub_state_ = on_wait_result_state_;
+      break;
+  case kOnHttpRequest:
+      hub_state_ = on_http_request_state_;
       break;
   }
   PLOG(INFO) << "ProtocolHub::ChangeHubState()切换为" << hub_state_->get_hub_state_() << "状态";

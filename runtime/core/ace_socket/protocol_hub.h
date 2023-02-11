@@ -112,6 +112,8 @@ private:
     FirstTimeConnect* first_connect_state_;
     OnPcmData* on_pcm_data_state_;
     OnWaitResult* on_wait_result_state_;
+    OnHttpRequest* on_http_request_state_;
+    
     // OnHttpRequest* on_http_request_state_;
 
     // boost::uuids::uuid client_uuid_;  // 128 bits

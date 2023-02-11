@@ -53,6 +53,7 @@ void FirstTimeConnect::Execute(const std::string& buffer)
         // ph->connection_state_ = kOnHttpRequest;
         PLOG(INFO) << "TODO: 处理http请求 把请求传递给http server";
         // ph->states_machine_[ph->connection_state_]->Enter(ph, buffer);
+        protocol_hub_->ChangeHubState(kOnHttpRequest, buffer);
     }
 
     return;

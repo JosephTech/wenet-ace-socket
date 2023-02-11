@@ -4,6 +4,7 @@
 #include <string>
 #include <map>
 #include <memory>
+#include <vector>
 
 // #include "ace_socket/protocol_hub.h"
 #include "utils/log.h"
@@ -90,12 +91,13 @@ public:
     // OnHttpRequest() = default;
     OnHttpRequest(ProtocolHub* ph):protocol_hub_(ph){}
     ~OnHttpRequest(){}
-    void Enter(const std::string& buffer){}
-    void Execute(const std::string& buffer){}
-    void Exit(){}
+    void Enter(const std::string& buffer);
+    void Execute(const std::string& buffer);
+    void Exit();
     ConnectionState get_hub_state_(){return kOnHttpRequest;}
-    RequestHttp ParseHttpRequest(std::string& buffer);
+    int ParseHttpRequest(const std::string& buffer, RequestHttp* rh);
 private:
+    std::vector<std::string> split(const std::string& str, std::string separator);
     ProtocolHub* protocol_hub_;
 };
 
