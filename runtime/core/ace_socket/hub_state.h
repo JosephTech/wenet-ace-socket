@@ -67,7 +67,7 @@ public:
     void Enter(const std::string& buffer);
     void Execute(const std::string& buffer);
     void Exit();
-    ConnectionState get_hub_state_(){return kOnPcmData;};
+    ConnectionState get_hub_state_(){return kOnPcmData;}
 private:
     ProtocolHub* protocol_hub_;
 };
@@ -93,7 +93,7 @@ public:
     void Enter(const std::string& buffer){}
     void Execute(const std::string& buffer){}
     void Exit(){}
-    ConnectionState get_hub_state_(){return kOnHttpRequest;};
+    ConnectionState get_hub_state_(){return kOnHttpRequest;}
     RequestHttp ParseHttpRequest(std::string& buffer);
 private:
     ProtocolHub* protocol_hub_;
@@ -107,7 +107,7 @@ public:
     void Enter(const std::string& buffer){}
     void Execute(const std::string& buffer){}
     void Exit(){}
-    ConnectionState get_hub_state_(){return kOnWaitResult;};
+    ConnectionState get_hub_state_(){return kOnWaitResult;}
 private:
     ProtocolHub* protocol_hub_;
 };

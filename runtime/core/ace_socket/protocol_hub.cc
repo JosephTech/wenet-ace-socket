@@ -1,9 +1,11 @@
 
+#include <cstring>
 
 #include <boost/json/src.hpp>
 #include <boost/uuid/uuid.hpp>
 #include <boost/uuid/uuid_generators.hpp>
 #include <boost/uuid/uuid_io.hpp>
+#include <boost/asio.hpp>
 #include "utils/log.h"
 
 #include "ace_socket/protocol_hub.h"
@@ -11,6 +13,7 @@
 namespace wenet{
 
 namespace json = boost::json;
+namespace asio = boost::asio;
 
 ProtocolHub::ProtocolHub(Participant* client,
                 std::shared_ptr<FeaturePipelineConfig> feature_config,
@@ -39,8 +42,8 @@ ProtocolHub::ProtocolHub(Participant* client,
     client_uuid_ = boost::uuids::to_string(id);
     PLOG(INFO) << "client uuid is " << client_uuid_;
 
-    // 36字节
-    if(-1 == client_->socket().send_n(client_uuid_.c_str(), strlen(client_uuid_.c_str())+1))
+    // 36字节,定长
+    if(-1 == client_->socket().send_n(client_uuid_.c_str(),client_uuid_.length()))
     {
         client_->handle_close(ACE_INVALID_HANDLE, 0);
         PLOG(ERROR) << "send uuid fail. close socket stream.";
@@ -343,10 +346,15 @@ void ProtocolHub::DecodeThreadFunc()
 void ProtocolHub::OnPartialResult(const std::string& result) {
     LOG(INFO) << "Partial result: " << result;
     PLOG(INFO) << "TODO(Joseph): 此处需发送Partial识别结果";
-    // json::value rv = {
-    //     {"status", "ok"}, {"type", "partial_result"}, {"nbest", result}};
+    json::value rv = {
+        {"status", "ok"}, {"type", "partial_result"}, {"nbest", result}};
     // ws_.text(true);
     // ws_.write(asio::buffer(json::serialize(rv)));
+    std::string sendbuf = json::serialize(rv);
+    sendbuf += "\r\n";
+
+    PLOG(INFO) << "send buf is " << sendbuf;
+    client_->socket().send(sendbuf.c_str(), sendbuf.length());
 }
 
 void ProtocolHub::OnFinalResult(const std::string& result) {
@@ -354,18 +362,27 @@ void ProtocolHub::OnFinalResult(const std::string& result) {
     // PLOG(INFO) << "n best is " << nbest_;
     // PLOG(INFO) << "continuous_decoding_ is " << continuous_decoding_;
     PLOG(INFO) << "TODO(Joseph): 此处需发送final识别结果";
-    //   json::value rv = {
-    //       {"status", "ok"}, {"type", "final_result"}, {"nbest", result}};
+    json::value rv = {{"status", "ok"}, {"type", "final_result"}, {"nbest", result}};
     //   ws_.text(true);
     //   ws_.write(asio::buffer(json::serialize(rv)));
+    std::string sendbuf = json::serialize(rv);
+    sendbuf += "\r\n";
+
+    PLOG(INFO) << "send buf is " << sendbuf;
+    client_->socket().send(sendbuf.c_str(), sendbuf.length());
 }
 
 void ProtocolHub::OnFinish() {
     PLOG(INFO) << "TODO(Joseph): 此处需发送识别结束信号"; 
-    // Send finish tag
-    // json::value rv = {{"status", "ok"}, {"type", "speech_end"}};
+    json::value rv = {{"status", "ok"}, {"type", "speech_end"}};
     // ws_.text(true);
     // ws_.write(asio::buffer(json::serialize(rv)));
+    std::string sendbuf = json::serialize(rv);
+    sendbuf += "\r\n";
+
+    PLOG(INFO) << "send buf is " << sendbuf;
+    client_->socket().send(sendbuf.c_str(), sendbuf.length());
+    // client_->handle_close(ACE_INVALID_HANDLE, 0);  // 如果服务器主动关闭，客户端将收不到这条消息
 }
 
 std::string ProtocolHub::SerializeResult(bool finish) 
