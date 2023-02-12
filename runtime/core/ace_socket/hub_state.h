@@ -14,6 +14,7 @@ namespace wenet{
 enum ConnectionState
 {    
     kOnFirstTimeConnect,                // http header or socket protocol data with start signal and configs.
+    kOnTcpReady,
     kOnPcmData,                         // receive socket end signal or websocket end signal or continue put pcm data into feature_pipeline_ queue.
     kOnHttpRequest,                     // whether http request or need update to websocket protocol.
     kOnWebSocket,                       // receive pcm data or start signal and configs.
@@ -59,7 +60,6 @@ private:
     // std::shared_ptr<DecodeResource> decode_resource_;
 };
 
-
 class OnPcmData: public HubState{
 public:
     // OnPcmData() = default;
@@ -69,6 +69,20 @@ public:
     void Execute(const std::string& buffer);
     void Exit();
     ConnectionState get_hub_state_(){return kOnPcmData;}
+private:
+    ProtocolHub* protocol_hub_;
+};
+
+
+class OnTcpReady: public HubState{
+public:
+    // OnPcmData() = default;
+    OnTcpReady(ProtocolHub* ph):protocol_hub_(ph){}
+    ~OnTcpReady(){}
+    void Enter(const std::string& buffer){};
+    void Execute(const std::string& buffer);
+    void Exit(){};
+    ConnectionState get_hub_state_(){return kOnTcpReady;}
 private:
     ProtocolHub* protocol_hub_;
 };
@@ -98,6 +112,20 @@ public:
     int ParseHttpRequest(const std::string& buffer, RequestHttp* rh);
 private:
     std::vector<std::string> split(const std::string& str, std::string separator);
+    std::string strip_leading_char(const std::string& str, const char lead);
+    ProtocolHub* protocol_hub_;
+};
+
+class OnWebSocket: public HubState{
+public:
+    // OnPcmData() = default;
+    OnWebSocket(ProtocolHub* ph):protocol_hub_(ph){}
+    ~OnWebSocket(){}
+    void Enter(const std::string& buffer);
+    void Execute(const std::string& buffer);
+    void Exit(){}
+    ConnectionState get_hub_state_(){return kOnWebSocket;}
+private:
     ProtocolHub* protocol_hub_;
 };
 
@@ -113,8 +141,6 @@ public:
 private:
     ProtocolHub* protocol_hub_;
 };
-
-
 
 } // namespace wenet
 

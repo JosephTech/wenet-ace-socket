@@ -1,11 +1,13 @@
-# include "ace_socket/hub_state.h"
+#include "ace_socket/hub_state.h"
+#include "ace_socket/protocol_hub.h" 
 
 namespace wenet{
 
 void OnHttpRequest::Enter(const std::string& buffer)
 {
     RequestHttp rh;
-    if(-1 == ParseHttpRequest(buffer, &rh)){
+    if(-1 == ParseHttpRequest(buffer, &rh))
+    {
         PLOG(ERROR) << "invalid protocol.";
         return;
     }
@@ -17,7 +19,16 @@ void OnHttpRequest::Enter(const std::string& buffer)
     PLOG(INFO) << rh.upgrade;
     PLOG(INFO) << rh.sec_websocket_key;
     //PLOG(INFO) << rh.param;
-    PLOG(INFO) << "OnHttpRequest::Enter()需要解析http请求,判断是否升级到websocket";
+    if(0 == rh.version.compare("HTTP/1.1") && rh.connection.find("Upgrade") == std::string::npos)
+    {
+        PLOG(INFO) << "TODO(Joseph): 此处继续使用http协议, 获取网页";
+    }
+    else if(0 == rh.version.compare("HTTP/1.1") && rh.connection.find("Upgrade") != std::string::npos && rh.upgrade.find("websocket") != std::string::npos)
+    {
+        PLOG(INFO) << "TODO(Joseph): 此处需切换为websocket协议";
+        protocol_hub_->set_request_http_(rh);
+        protocol_hub_->ChangeHubState(kOnWebSocket, "");
+    }
     return;
 }
 
@@ -73,24 +84,28 @@ int OnHttpRequest::ParseHttpRequest(const std::string& buffer, RequestHttp* rh)
     // request line
     for (int i = 1; i < request_lines.size()-1; ++i)
     {
-        std::vector<std::string> segs = split(request_lines[i], ":");
+        std::vector<std::string> segs = split(request_lines[i], ": ");
         if(segs.size() == 2)
         {
             if(0 == segs[0].compare("Host"))
             {
-                rh->host = segs[1];
+                std::string tmp = strip_leading_char(segs[1], ' ');
+                rh->host = tmp;
             }
             else if(0 == segs[0].compare("Connection"))
             {
-                rh->connection = segs[1];
+                std::string tmp = strip_leading_char(segs[1], ' ');
+                rh->connection = tmp;
             }
             else if (0 == segs[0].compare("Upgrade"))
             {
-                rh->upgrade = segs[1];
+                std::string tmp = strip_leading_char(segs[1], ' ');
+                rh->upgrade = tmp;
             } 
             else if (0 == segs[0].compare("Sec-WebSocket-Key"))
             {
-                rh->sec_websocket_key = segs[1];
+                std::string tmp = strip_leading_char(segs[1], ' ');
+                rh->sec_websocket_key = tmp;
             }
         }
     }
@@ -120,6 +135,16 @@ std::vector<std::string> OnHttpRequest::split(const std::string& str, std::strin
         results.push_back(str.substr(begin));
     }
     return results;
+}
+
+std::string OnHttpRequest::strip_leading_char(const std::string& str, const char lead)
+{
+    int i = 0;
+    for(; i < str.length(); ++i)
+    {
+        if(str[i] != lead) break;
+    }
+    return str.substr(i);
 }
 
 } // namespace wenet

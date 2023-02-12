@@ -72,6 +72,9 @@ public:
     void set_on_socket_(bool flag){on_socket_ = flag;}
     bool get_on_socket_(){return on_socket_;}
 
+    void set_request_http_(RequestHttp rh){request_http_ = rh;}
+    RequestHttp& get_request_http_(){return request_http_;}
+
     void set_on_websocket_(bool flag){on_websocket_ = flag;}
     bool get_on_websocket_(){return on_websocket_;}
     Participant* get_client_(){return client_;}
@@ -110,14 +113,17 @@ private:
     Participant* client_;
     HubState* hub_state_;
     FirstTimeConnect* first_connect_state_;
+    OnTcpReady* on_tcp_ready_state_;
     OnPcmData* on_pcm_data_state_;
     OnWaitResult* on_wait_result_state_;
     OnHttpRequest* on_http_request_state_;
+    OnWebSocket* on_websocket_state_;
     
     // OnHttpRequest* on_http_request_state_;
 
     // boost::uuids::uuid client_uuid_;  // 128 bits
     std::string client_uuid_;
+    RequestHttp request_http_;
 };
 
 

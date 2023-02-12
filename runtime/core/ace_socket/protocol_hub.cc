@@ -33,8 +33,10 @@ ProtocolHub::ProtocolHub(Participant* client,
     //                                     decoder_,
     //                                     decode_thread_);
     on_pcm_data_state_ = new OnPcmData(this);
+    on_tcp_ready_state_ = new OnTcpReady(this);
     on_wait_result_state_ = new OnWaitResult(this);
     on_http_request_state_ = new OnHttpRequest(this);
+    on_websocket_state_ = new OnWebSocket(this);
     // on_http_request_state_ = new OnHttpRequest();
     hub_state_ = first_connect_state_;
 
@@ -43,12 +45,7 @@ ProtocolHub::ProtocolHub(Participant* client,
     client_uuid_ = boost::uuids::to_string(id);
     PLOG(INFO) << "client uuid is " << client_uuid_;
 
-    // 36字节,定长
-    if(-1 == client_->socket().send_n(client_uuid_.c_str(),client_uuid_.length()))
-    {
-        client_->handle_close(ACE_INVALID_HANDLE, 0);
-        PLOG(ERROR) << "send uuid fail. close socket stream.";
-    }
+    
     
     // boost::uuids::random_generator gen;
     // for (int i = 0; i < 100; ++i)
@@ -67,6 +64,7 @@ int ProtocolHub::ProcessRequest(const char* buf, ssize_t rev)
     std::string buffer(buf,rev);
 
     // 处理每次新的buffer，放在Execute, 切换状态时，上个状态剩余数据处理，放在->enter(中)
+    PLOG(INFO) << "hub_state_ is " << hub_state_->get_hub_state_();
     hub_state_->Execute(buffer);
 
     // TODO: 状态： on_pcm, 
@@ -425,11 +423,17 @@ void ProtocolHub::ChangeHubState(ConnectionState state, const string& buffer)
   case kOnPcmData:
       hub_state_ = on_pcm_data_state_;
       break;
+  case kOnTcpReady:
+      hub_state_ = on_tcp_ready_state_;
+      break;
   case kOnWaitResult:
       hub_state_ = on_wait_result_state_;
       break;
   case kOnHttpRequest:
       hub_state_ = on_http_request_state_;
+      break;
+  case kOnWebSocket:
+      hub_state_ = on_websocket_state_;
       break;
   }
   PLOG(INFO) << "ProtocolHub::ChangeHubState()切换为" << hub_state_->get_hub_state_() << "状态";

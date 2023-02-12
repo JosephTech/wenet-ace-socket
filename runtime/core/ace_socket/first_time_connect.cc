@@ -1,6 +1,7 @@
 #include "ace_socket/hub_state.h"
 #include "ace_socket/protocol_hub.h"
 #include "ace_socket/group.h"
+#include "ace_socket/participant.h"
 
 
 namespace wenet{
@@ -21,41 +22,25 @@ void FirstTimeConnect::Execute(const std::string& buffer)
     // continuous_decoding: True 1, False 0. for long speech recognition.
     // uuid: clients with same uuid has the same group.
     // example: 's'+ '3' + '1'` + "ce25a119-fbe1-4c5b-a2ae-0e68d2477c5c" 
-    int head_len = 3 + 36;
-    int uuid_len = 36;
-    std::string uuid = buffer.substr(3, uuid_len);
-    std::string signal;
-    signal.push_back(buffer[0]);
-    PLOG(INFO) << "uuid is " << uuid;
-    PLOG(INFO) << "signal is " << signal;
-
-    if (signal == "s" && uuid == protocol_hub_->get_client_uuid_())
-    {
-        // ph->on_socket_ = true;
-        // ph->connection_state_ = kOnPcmData;
-        bool ret = GroupManager::Instance().JoinGroupManager(uuid, protocol_hub_->get_client_());    
-        if(!ret)
-        {
-            PLOG(INFO) << "FirstTimeConnect::Execute(), client join failed";
-        }
-        PLOG(INFO) << "TODO: FirstTimeConnect::execute()切换为pcm_data状态";
-        
-        protocol_hub_->set_nbest_(int(buffer[1] - '0'));
-        if(buffer[2] == '0' || buffer[2] == '1')
-        {
-            protocol_hub_->set_continuous_decoding_(int(buffer[2] - '0'));
-        }
-        protocol_hub_->set_on_socket_(true);
-        protocol_hub_->OnSpeechStart();
-    }
-    else
+    if(buffer.find("HTTP") != std::string::npos)
     {
         // ph->connection_state_ = kOnHttpRequest;
         PLOG(INFO) << "TODO: 处理http请求 把请求传递给http server";
         // ph->states_machine_[ph->connection_state_]->Enter(ph, buffer);
         protocol_hub_->ChangeHubState(kOnHttpRequest, buffer);
     }
-
+    else if (buffer.find("TCP") != std::string::npos)
+    {
+        // TCP, need client send "TCP"first
+        // 36字节,定长
+        if(-1 == protocol_hub_->get_client_()->socket().send_n(protocol_hub_->get_client_uuid_().c_str(),protocol_hub_->get_client_uuid_().length()))
+        {
+            //client_->handle_close(ACE_INVALID_HANDLE, 0);
+            PLOG(ERROR) << "send uuid fail. close socket stream.";
+        }
+        protocol_hub_->ChangeHubState(kOnTcpReady, buffer);
+    }
+    PLOG(INFO) << "TODO(Joseph): 需要有协议错误的返回值，服务器可以主动关闭连接";
     return;
 }
 
