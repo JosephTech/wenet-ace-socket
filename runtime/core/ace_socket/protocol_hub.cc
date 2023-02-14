@@ -2,9 +2,6 @@
 #include <cstring>
 
 #include <boost/json/src.hpp>
-#include <boost/uuid/uuid.hpp>
-#include <boost/uuid/uuid_generators.hpp>
-#include <boost/uuid/uuid_io.hpp>
 #include <boost/asio.hpp>
 #include "utils/log.h"
 
@@ -39,22 +36,6 @@ ProtocolHub::ProtocolHub(Participant* client,
     on_websocket_state_ = new OnWebSocket(this, on_pcm_data_state_);
     // on_http_request_state_ = new OnHttpRequest();
     hub_state_ = first_connect_state_;
-
-    boost::uuids::random_generator gen;
-    boost::uuids::uuid id = gen();
-    client_uuid_ = boost::uuids::to_string(id);
-    PLOG(INFO) << "client uuid is " << client_uuid_;
-
-    
-    
-    // boost::uuids::random_generator gen;
-    // for (int i = 0; i < 100; ++i)
-    // {
-    //     boost::uuids::uuid id = gen();
-    // //client_uuid_ = boost::uuids::to_string(id);
-    //     PLOG(INFO) << "client uuid is " << boost::uuids::to_string(id);
-    // }
-    
 }
 
 // int ProtocolHub::ProcessRequest(const std::string& buffer)

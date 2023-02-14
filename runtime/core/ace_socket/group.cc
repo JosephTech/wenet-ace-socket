@@ -1,4 +1,8 @@
 
+#include <boost/uuid/uuid.hpp>
+#include <boost/uuid/uuid_generators.hpp>
+#include <boost/uuid/uuid_io.hpp>
+
 #include "utils/log.h"
 #include "ace_socket/group.h"
 #include "ace_socket/participant.h"
@@ -6,27 +10,37 @@
 
 namespace wenet{
 
-bool GroupManager::JoinGroupManager(string uuid, Participant* pa)
+bool GroupManager::JoinGroup(string uuid, Participant* pa)
 {
-    if(!uuid_map_.count(uuid))
-    {
-        // first client
-        Group* group = new Group();
-        group->Join(pa);
-        uuid_map_.insert({uuid, group});
-        return true;
-    }
-    else
+    if(uuid_map_.count(uuid))
     {
         // multiple clients
         uuid_map_[uuid]->Join(pa);
+        pa->set_uuid_(uuid);
         return true;
     }
     return false;
 }
 
+bool GroupManager::JoinNewGroup(Participant* pa)
+{
+    // first client
+    std::string uuid = GenerateUuid();
+    Group* group = new Group();
+    group->Join(pa);
+    uuid_map_.insert({uuid, group});
+    pa->set_uuid_(uuid);
+    return true;
+}
+
+std::string GroupManager::GenerateUuid()
+{
+    boost::uuids::random_generator gen;
+    boost::uuids::uuid id = gen();
+    return boost::uuids::to_string(id);
+}
+
 void Group::Join(Participant* client){
-    PLOG(INFO) << "new client join  " << client->get_hub_()->get_client_uuid_();
     clients_.push_back(client);
 }
 

@@ -1,5 +1,6 @@
-# include "ace_socket/hub_state.h"
+#include "ace_socket/hub_state.h"
 #include "ace_socket/protocol_hub.h"
+#include "ace_socket/participant.h"
 
 namespace wenet{
 
@@ -22,7 +23,7 @@ void OnPcmData::Execute(const std::string& buffer)
 
         PLOG(INFO) << "uuid is " << uuid;
         PLOG(INFO) << "signal is " << signal;
-        if (signal == "e" && uuid == protocol_hub_->get_client_uuid_())
+        if (signal == "e" && uuid == protocol_hub_->get_client_()->get_uuid_())
         {
             PLOG(INFO) << "OnPcmData::Execute() socket结束录音,向decoder发送停止信号, 发送等待解码完成，发送result到客户端\n";
             // protocol_hub_->OnSpeechEnd();

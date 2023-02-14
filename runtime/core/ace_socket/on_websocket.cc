@@ -12,6 +12,7 @@
 #include "ace_socket/protocol_hub.h"
 #include "ace_socket/participant.h"
 #include "ace_socket/base64.h"
+#include "ace_socket/group.h"
 
 #include <chrono>
 #include <thread>
@@ -156,7 +157,6 @@ int OnWebSocket::PackFrame(bool fin, bool mask, uint8_t opcode, string payload, 
     PLOG(INFO) << "payload_len is" << payload.length();
     uint32_t payload_len = payload.length();
     uint8_t m_bit = 0x80;
-
 
     //uint32_t int seed = 1008810088;
     srand((uint32_t)time(nullptr));
@@ -408,7 +408,29 @@ void OnWebSocket::ProcessTextPayload(const std::string& text)
     {
         json::object obj = decode_val.get_object();
         boost::json::string signal = obj["signal"].as_string();
-        if("start" == signal)
+        if("new_group" == signal)
+        {
+            GroupManager::Instance().JoinNewGroup(protocol_hub_->get_client_());
+        }
+        else if("join_group" == signal)
+        {
+            if(obj.find("uuid") != obj.end() && obj["uuid"].is_string())
+            {
+                std::string uuid = json::value_to<std::string>(obj["uuid"]);
+                PLOG(INFO) << "new group, uuid is" << uuid;
+                if(!GroupManager::Instance().JoinGroup(uuid, protocol_hub_->get_client_()))
+                {
+                    PLOG(ERROR) << "uuid not exist. close socket stream.";
+                    protocol_hub_->get_client_()->handle_close(ACE_INVALID_HANDLE, 0);
+                }
+            }
+            else
+            {
+                PLOG(ERROR) << "wrong protocol. close socket stream.";
+                protocol_hub_->get_client_()->handle_close(ACE_INVALID_HANDLE, 0);
+            }
+        }
+        else if("start" == signal)
         {
             // configs
             if(obj.find("nbest") != obj.end() && obj["nbest"].is_int64())

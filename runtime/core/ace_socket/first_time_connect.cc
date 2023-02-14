@@ -31,16 +31,44 @@ void FirstTimeConnect::Execute(const std::string& buffer)
     }
     else if (buffer.find("TCP") != std::string::npos)
     {
-        // TCP, need client send "TCP"first
-        // 36字节,定长
-        if(-1 == protocol_hub_->get_client_()->socket().send_n(protocol_hub_->get_client_uuid_().c_str(),protocol_hub_->get_client_uuid_().length()))
+        int tcp_len = 3;
+        int tcp_uuid_len = 3 + 36;
+        int pos = buffer.find("\r\n");
+        if(tcp_len == pos)
         {
-            //client_->handle_close(ACE_INVALID_HANDLE, 0);
-            PLOG(ERROR) << "send uuid fail. close socket stream.";
+            //std::string response = protocol_hub_->get_client_uuid_() + "\r\n";
+            GroupManager::Instance().JoinNewGroup(protocol_hub_->get_client_());
+            std::string response = protocol_hub_->get_client_()->get_uuid_() + "\r\n";
+            // "TCP\r\n"  new group
+            if(-1 == protocol_hub_->get_client_()->socket().send_n(response.c_str(), response.length()))
+            {
+                PLOG(ERROR) << "send uuid fail. close socket stream.";
+                protocol_hub_->get_client_()->handle_close(ACE_INVALID_HANDLE, 0);
+            }
+            protocol_hub_->ChangeHubState(kOnTcpReady, buffer);
         }
-        protocol_hub_->ChangeHubState(kOnTcpReady, buffer);
+        else if(tcp_uuid_len == pos)
+        {
+            // "TCPuuid\r\n"  join group
+            std::string uuid = buffer.substr(3, 36);
+            if(!GroupManager::Instance().JoinGroup(uuid, protocol_hub_->get_client_()))
+            {
+                PLOG(ERROR) << "uuid not exist. close socket stream.";
+                protocol_hub_->get_client_()->handle_close(ACE_INVALID_HANDLE, 0);
+            }
+            protocol_hub_->ChangeHubState(kOnTcpReady, buffer);
+        }
+        else
+        {
+            PLOG(ERROR) << "protocol wrong. close socket stream.";
+            protocol_hub_->get_client_()->handle_close(ACE_INVALID_HANDLE, 0);
+        }
     }
-    PLOG(INFO) << "TODO(Joseph): 需要有协议错误的返回值，服务器可以主动关闭连接";
+    else
+    {
+        PLOG(ERROR) << "protocol wrong. close socket stream.";
+        protocol_hub_->get_client_()->handle_close(ACE_INVALID_HANDLE, 0);
+    }
     return;
 }
 

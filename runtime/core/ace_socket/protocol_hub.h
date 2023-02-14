@@ -11,7 +11,6 @@
 #include <unordered_map>
 
 
-// #include "boost/uuid/uuid.hpp"
 #include "utils/log.h"
 
 #include "decoder/asr_decoder.h"
@@ -78,9 +77,7 @@ public:
     void set_on_websocket_(bool flag){on_websocket_ = flag;}
     bool is_on_websocket_(){return on_websocket_;}
     Participant* get_client_(){return client_;}
-
     HubState* get_hub_state_(){return hub_state_;}
-    std::string& get_client_uuid_(){return client_uuid_;}
 
     std::shared_ptr<FeaturePipeline>& get_feature_pipeline_(){return feature_pipeline_;}
     std::shared_ptr<std::thread>& get_decode_thread_(){return decode_thread_;}
@@ -120,9 +117,6 @@ private:
     OnWebSocket* on_websocket_state_;
     
     // OnHttpRequest* on_http_request_state_;
-
-    // boost::uuids::uuid client_uuid_;  // 128 bits
-    std::string client_uuid_;
     RequestHttp request_http_;
 };
 

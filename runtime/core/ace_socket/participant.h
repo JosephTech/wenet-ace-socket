@@ -39,6 +39,8 @@ public:
         { return sock_.get_handle (); }
     
     ProtocolHub* get_hub_(){return hub_; }
+    void set_uuid_(std::string uuid){uuid_ = uuid; }
+    std::string& get_uuid_(){return uuid_; }
 
 // private:
 //     int SavePcmFile();
@@ -53,6 +55,7 @@ private:
     std::shared_ptr<FeaturePipelineConfig> feature_config_;
     std::shared_ptr<DecodeOptions> decode_config_;
     std::shared_ptr<DecodeResource> decode_resource_;
+    std::string uuid_;
 
     ProtocolHub* hub_ = nullptr;
 };

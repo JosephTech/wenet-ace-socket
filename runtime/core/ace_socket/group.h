@@ -34,8 +34,9 @@ public:
         static GroupManager instance;
         return instance;
     }
-    bool JoinGroupManager(string,Participant* pa);
-
+    bool JoinGroup(string uuid, Participant* pa);
+    bool JoinNewGroup(Participant* pa);
+    std::string GenerateUuid();
 private:
     std::unordered_map<std::string, Group*> uuid_map_ = {};
 };
