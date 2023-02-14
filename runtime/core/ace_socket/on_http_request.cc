@@ -25,7 +25,8 @@ void OnHttpRequest::Enter(const std::string& buffer)
     }
     else if(0 == rh.version.compare("HTTP/1.1") && rh.connection.find("Upgrade") != std::string::npos && rh.upgrade.find("websocket") != std::string::npos)
     {
-        PLOG(INFO) << "TODO(Joseph): 此处需切换为websocket协议";
+        PLOG(INFO) << "TODO(Joseph): change to websocket protocol";
+        protocol_hub_->set_on_websocket_(true);
         protocol_hub_->set_request_http_(rh);
         protocol_hub_->ChangeHubState(kOnWebSocket, "");
     }
@@ -44,7 +45,7 @@ void OnHttpRequest::Exit()
 
 int OnHttpRequest::ParseHttpRequest(const std::string& buffer, RequestHttp* rh)
 {
-    PLOG(INFO) << "buffer is " << buffer;
+    PLOG(INFO) << "http request buffer is " << buffer;
     std::vector<std::string> request_lines = split(buffer, "\r\n");
     if (request_lines.size() < 1)
     {

@@ -36,7 +36,6 @@ public:
     virtual void Execute(const std::string& buffer) = 0;        // handle_input()
     virtual void Exit() = 0;
     virtual ConnectionState get_hub_state_() = 0;
-
 private:
 };
 
@@ -60,18 +59,7 @@ private:
     // std::shared_ptr<DecodeResource> decode_resource_;
 };
 
-class OnPcmData: public HubState{
-public:
-    // OnPcmData() = default;
-    OnPcmData(ProtocolHub* ph):protocol_hub_(ph){}
-    ~OnPcmData(){}
-    void Enter(const std::string& buffer);
-    void Execute(const std::string& buffer);
-    void Exit();
-    ConnectionState get_hub_state_(){return kOnPcmData;}
-private:
-    ProtocolHub* protocol_hub_;
-};
+
 
 
 class OnTcpReady: public HubState{
@@ -83,6 +71,19 @@ public:
     void Execute(const std::string& buffer);
     void Exit(){};
     ConnectionState get_hub_state_(){return kOnTcpReady;}
+private:
+    ProtocolHub* protocol_hub_;
+};
+
+class OnPcmData: public HubState{
+public:
+    // OnPcmData() = default;
+    OnPcmData(ProtocolHub* ph):protocol_hub_(ph){}
+    ~OnPcmData(){}
+    void Enter(const std::string& buffer);
+    void Execute(const std::string& buffer);
+    void Exit();
+    ConnectionState get_hub_state_(){return kOnPcmData;}
 private:
     ProtocolHub* protocol_hub_;
 };
@@ -109,25 +110,45 @@ public:
     void Execute(const std::string& buffer);
     void Exit();
     ConnectionState get_hub_state_(){return kOnHttpRequest;}
-    int ParseHttpRequest(const std::string& buffer, RequestHttp* rh);
 private:
+    int ParseHttpRequest(const std::string& buffer, RequestHttp* rh);
     std::vector<std::string> split(const std::string& str, std::string separator);
     std::string strip_leading_char(const std::string& str, const char lead);
     ProtocolHub* protocol_hub_;
 };
 
+// RFC 6455.
+struct WebSocketProtocol{
+	bool fin;                           //数据帧状态：0b0 it's not last fragment, continue. 0b1 last fragment
+	bool mask;                          //是否掩码
+    char masking_key[4];                //掩码,若Mask为1则该字段存在，若为0则该字段缺失
+    uint8_t opcode;                     //控制码：0x0继续、0x1文本、0x2二进制，0x8关闭，0x9ping，0xApong
+    uint64_t payload_len;               //数据长度
+    std::string payload;                //数据载荷
+};
+
+
 class OnWebSocket: public HubState{
 public:
     // OnPcmData() = default;
-    OnWebSocket(ProtocolHub* ph):protocol_hub_(ph){}
+    OnWebSocket(ProtocolHub* ph, OnPcmData* pd):protocol_hub_(ph), pcm_processor_(pd){}
     ~OnWebSocket(){}
     void Enter(const std::string& buffer);
-    void Execute(const std::string& buffer);
+    void Execute(const std::string& buf);
     void Exit(){}
+    int SendText(const std::string& text);
     ConnectionState get_hub_state_(){return kOnWebSocket;}
-private:
+private:    
+    int ParseFrame(const std::string& buffer, WebSocketProtocol& frame);
+    void ProcessTextPayload(const std::string& buffer);
+    int PackFrame(bool fin, bool mask, uint8_t opcode, string payload, string& result_frame);
+    int ApplyMask(string& payload, uint32_t masking_key);
     ProtocolHub* protocol_hub_;
+    OnPcmData* pcm_processor_;
+    std::string remain_buffer_ = "";
 };
+
+
 
 class OnWaitResult: public HubState{
 public:

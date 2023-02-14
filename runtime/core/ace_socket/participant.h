@@ -11,7 +11,7 @@
 #include "ace_socket/protocol_hub.h"
 // class ProtocolHub;
 
-#define MAX_BUF_LEN 1024 
+#define MAX_BUF_LEN (64*1024) 
 
 namespace wenet{
 

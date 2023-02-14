@@ -36,7 +36,7 @@ ProtocolHub::ProtocolHub(Participant* client,
     on_tcp_ready_state_ = new OnTcpReady(this);
     on_wait_result_state_ = new OnWaitResult(this);
     on_http_request_state_ = new OnHttpRequest(this);
-    on_websocket_state_ = new OnWebSocket(this);
+    on_websocket_state_ = new OnWebSocket(this, on_pcm_data_state_);
     // on_http_request_state_ = new OnHttpRequest();
     hub_state_ = first_connect_state_;
 
@@ -226,7 +226,7 @@ void ProtocolHub::OnSpeechStart()
     feature_pipeline_ = std::make_shared<FeaturePipeline>(*feature_config_);
     decoder_ = std::make_shared<AsrDecoder>(feature_pipeline_, decode_resource_, *decode_config_);
     // on_socket_ = true;
-    hub_state_ = on_pcm_data_state_;
+    // hub_state_ = on_pcm_data_state_;
     PLOG(INFO) << "TODO(Joseph):  ProtocolHub::OnSpeechStart()此处需join()线程\n";
     decode_thread_ = std::make_shared<std::thread>(&ProtocolHub::DecodeThreadFunc, this);
   
@@ -351,9 +351,17 @@ void ProtocolHub::OnPartialResult(const std::string& result) {
     // ws_.write(asio::buffer(json::serialize(rv)));
     std::string sendbuf = json::serialize(rv);
     sendbuf += "\r\n";
-
     PLOG(INFO) << "send buf is " << sendbuf;
-    client_->socket().send(sendbuf.c_str(), sendbuf.length());
+    if(on_socket_)
+    {
+        
+        client_->socket().send(sendbuf.c_str(), sendbuf.length());
+    }
+    else if(on_websocket_ && hub_state_->get_hub_state_() == kOnWebSocket)
+    {
+        on_websocket_state_->SendText(sendbuf);
+    }
+    
 }
 
 void ProtocolHub::OnFinalResult(const std::string& result) {
@@ -368,7 +376,15 @@ void ProtocolHub::OnFinalResult(const std::string& result) {
     sendbuf += "\r\n";
 
     PLOG(INFO) << "send buf is " << sendbuf;
-    client_->socket().send(sendbuf.c_str(), sendbuf.length());
+    if(on_socket_)
+    {
+        
+        client_->socket().send(sendbuf.c_str(), sendbuf.length());
+    }
+    else if(on_websocket_ && hub_state_->get_hub_state_() == kOnWebSocket)
+    {
+        on_websocket_state_->SendText(sendbuf);
+    }
 }
 
 void ProtocolHub::OnFinish() {
@@ -380,8 +396,16 @@ void ProtocolHub::OnFinish() {
     sendbuf += "\r\n";
 
     PLOG(INFO) << "send buf is " << sendbuf;
-    client_->socket().send(sendbuf.c_str(), sendbuf.length());
     // client_->handle_close(ACE_INVALID_HANDLE, 0);  // 如果服务器主动关闭，客户端将收不到这条消息
+    if(on_socket_)
+    {
+        
+        client_->socket().send(sendbuf.c_str(), sendbuf.length());
+    }
+    else if(on_websocket_ && hub_state_->get_hub_state_() == kOnWebSocket)
+    {
+        on_websocket_state_->SendText(sendbuf);
+    }
 }
 
 std::string ProtocolHub::SerializeResult(bool finish) 

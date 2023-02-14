@@ -37,6 +37,7 @@ void OnTcpReady::Execute(const std::string& buffer)
         }
         protocol_hub_->set_on_socket_(true);
         protocol_hub_->OnSpeechStart();
+        protocol_hub_->ChangeHubState(kOnPcmData, "");
     }
 
 }
