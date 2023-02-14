@@ -18,6 +18,8 @@ int main(int argc, char *argv[])
     auto feature_config = wenet::InitFeaturePipelineConfigFromFlags();    
     auto decode_resource = wenet::InitDecodeResourceFromFlags();
 
+    //wenet::GroupManager::Instance();
+
     wenet::ParticipantAcceptor socket_server(feature_config, decode_config, decode_resource);
     // socket_server.pass_configs(feature_config, decode_config, decode_resource);
 
