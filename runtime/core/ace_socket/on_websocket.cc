@@ -3,6 +3,7 @@
 #include <arpa/inet.h>
 #include <openssl/sha.h>
 #include <boost/json.hpp>
+//#include <boost/json/src.hpp>
 #include <cassert>
 #include <stdlib.h>
 #include <time.h>
@@ -411,6 +412,9 @@ void OnWebSocket::ProcessTextPayload(const std::string& text)
         if("new_group" == signal)
         {
             GroupManager::Instance().JoinNewGroup(protocol_hub_->get_client_());
+            json::value rv = {"uuid", protocol_hub_->get_client_()->get_uuid_().c_str()};
+            std::string response = json::serialize(rv);
+            SendText(response);
         }
         else if("join_group" == signal)
         {
