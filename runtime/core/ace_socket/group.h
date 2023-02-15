@@ -1,3 +1,6 @@
+#ifndef GROUP_H_
+#define GROUP_H_
+
 #include <string>
 #include <vector>
 #include <unordered_map>
@@ -14,12 +17,15 @@ public:
     void Join(Participant* client);
     int Leave(Participant* client);
     void BroadcastMessage(const std::string& message);
+    int set_current_on_microphone_(Participant* pa);
+    Participant* get_current_on_microphone_(){return current_on_microphone_;}
 private:
-    std::vector<Participant*> clients_ = std::vector<Participant*>(3);
+    std::vector<Participant*> clients_;
+    Participant* current_on_microphone_ = nullptr;          // which client use mic now.
 };
 
 //
-//  key: uuid, value: group
+//  singleton.
 //
 class GroupManager{
 private:
@@ -34,8 +40,8 @@ public:
         static GroupManager instance;
         return instance;
     }
-    bool JoinGroup(string uuid, Participant* pa);
-    bool JoinNewGroup(Participant* pa);
+    int JoinGroup(string uuid, Participant* pa);
+    int JoinNewGroup(Participant* pa);
     std::string GenerateUuid();
 private:
     std::unordered_map<std::string, Group*> uuid_map_ = {};
@@ -44,3 +50,5 @@ private:
 
 
 } // namespace wenet
+
+#endif  /* GROUP_H_ */

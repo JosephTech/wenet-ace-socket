@@ -9,6 +9,7 @@
 #include <sstream>
 
 #include "ace_socket/protocol_hub.h"
+#include "ace_socket/group.h"
 // class ProtocolHub;
 
 #define MAX_BUF_LEN (64*1024) 
@@ -41,6 +42,8 @@ public:
     ProtocolHub* get_hub_(){return hub_; }
     void set_uuid_(std::string uuid){uuid_ = uuid; }
     std::string& get_uuid_(){return uuid_; }
+    Group* get_group_(){return group_; }
+    void set_group_(Group* gp){group_ = gp; }
 
 // private:
 //     int SavePcmFile();
@@ -55,9 +58,10 @@ private:
     std::shared_ptr<FeaturePipelineConfig> feature_config_;
     std::shared_ptr<DecodeOptions> decode_config_;
     std::shared_ptr<DecodeResource> decode_resource_;
-    std::string uuid_;
+    std::string uuid_ = "-1";
 
     ProtocolHub* hub_ = nullptr;
+    Group* group_ = nullptr;
 };
 
 } // namespace wenet

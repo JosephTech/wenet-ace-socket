@@ -10,27 +10,29 @@
 
 namespace wenet{
 
-bool GroupManager::JoinGroup(string uuid, Participant* pa)
+int GroupManager::JoinGroup(string uuid, Participant* pa)
 {
     if(uuid_map_.count(uuid))
     {
         // multiple clients
         uuid_map_[uuid]->Join(pa);
         pa->set_uuid_(uuid);
-        return true;
+        return 0;
     }
-    return false;
+    return -1;
 }
 
-bool GroupManager::JoinNewGroup(Participant* pa)
+int GroupManager::JoinNewGroup(Participant* pa)
 {
     // first client
     std::string uuid = GenerateUuid();
     Group* group = new Group();
     group->Join(pa);
+    // on microphone. First join client grab the microphone default.
+    group->set_current_on_microphone_(pa);
     uuid_map_.insert({uuid, group});
     pa->set_uuid_(uuid);
-    return true;
+    return 0;
 }
 
 std::string GroupManager::GenerateUuid()
@@ -40,8 +42,22 @@ std::string GroupManager::GenerateUuid()
     return boost::uuids::to_string(id);
 }
 
+int Group::set_current_on_microphone_(Participant* pa)
+{
+    for(auto c : clients_)
+    {
+        if(c == pa)
+        {
+            current_on_microphone_ = pa;
+            return 0;
+        } 
+    }
+    return -1;
+}
+
 void Group::Join(Participant* client){
     clients_.push_back(client);
+    client->set_group_(this);
 }
 
 int Group::Leave(Participant* client){

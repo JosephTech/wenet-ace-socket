@@ -422,7 +422,7 @@ void OnWebSocket::ProcessTextPayload(const std::string& text)
             {
                 std::string uuid = json::value_to<std::string>(obj["uuid"]);
                 PLOG(INFO) << "new group, uuid is" << uuid;
-                if(!GroupManager::Instance().JoinGroup(uuid, protocol_hub_->get_client_()))
+                if(-1 == GroupManager::Instance().JoinGroup(uuid, protocol_hub_->get_client_()))
                 {
                     PLOG(ERROR) << "uuid not exist. close socket stream.";
                     protocol_hub_->get_client_()->handle_close(ACE_INVALID_HANDLE, 0);
@@ -434,8 +434,24 @@ void OnWebSocket::ProcessTextPayload(const std::string& text)
                 protocol_hub_->get_client_()->handle_close(ACE_INVALID_HANDLE, 0);
             }
         }
+        else if("on_mic" == signal)
+        {
+            // on microphone. Grab the microphone.
+            int ret = protocol_hub_->get_client_()->get_group_()->set_current_on_microphone_(protocol_hub_->get_client_());
+            if(-1 == ret)
+            {
+                PLOG(ERROR) << "program logic error. client not in group. close socket stream.";
+                protocol_hub_->get_client_()->handle_close(ACE_INVALID_HANDLE, 0);
+            }
+        }
         else if("start" == signal)
         {
+            // wenet compatible
+            if(nullptr == protocol_hub_->get_client_()->get_group_())
+            {
+                GroupManager::Instance().JoinNewGroup(protocol_hub_->get_client_());
+            }
+            
             // configs
             if(obj.find("nbest") != obj.end() && obj["nbest"].is_int64())
             {
