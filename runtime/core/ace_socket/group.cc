@@ -35,6 +35,22 @@ int GroupManager::JoinNewGroup(Participant* pa)
     return 0;
 }
 
+int GroupManager::LeaveGroup(string uuid, Participant* pa)
+{
+    if(uuid_map_.count(uuid))
+    {
+        uuid_map_[uuid]->Leave(pa);
+        if(0 == uuid_map_[uuid]->Size())
+        {
+            delete uuid_map_[uuid];
+        }
+        return 0;
+    }
+    // possible peer closed when client didn't get to join group. 
+    // in this case, uuid is -1.
+    return -1;
+}
+
 std::string GroupManager::GenerateUuid()
 {
     boost::uuids::random_generator gen;
@@ -65,7 +81,7 @@ int Group::Leave(Participant* client){
     {
         if (*iter == client)
         {
-            clients_.erase(iter);
+            clients_.erase(iter);   // Participant handle_close() delete client*.
             printf("INFO remove client %p", client);
             return 0;
         }

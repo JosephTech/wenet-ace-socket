@@ -42,7 +42,7 @@ public:
                 std::shared_ptr<DecodeOptions> decode_config,
                 std::shared_ptr<DecodeResource> decode_resource);
 
-    ~ProtocolHub(){}
+    ~ProtocolHub();
             
     int ProcessRequest(const char* buf, ssize_t rev);
     int ProcessRespond();

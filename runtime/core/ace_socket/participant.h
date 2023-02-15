@@ -59,7 +59,6 @@ private:
     std::shared_ptr<DecodeOptions> decode_config_;
     std::shared_ptr<DecodeResource> decode_resource_;
     std::string uuid_ = "-1";
-
     ProtocolHub* hub_ = nullptr;
     Group* group_ = nullptr;
 };

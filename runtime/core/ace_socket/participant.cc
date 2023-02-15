@@ -155,17 +155,17 @@ int Participant::handle_close(ACE_HANDLE handle, ACE_Reactor_Mask close_mask)
             hub_->get_decode_thread_()->join();
         }
     }
+    GroupManager::Instance().LeaveGroup(uuid_, this);
     // if(hub_ && hub_->get_record_pcm_()) hub_->SavePcmFile();
-
     if(sock_.get_handle() != ACE_INVALID_HANDLE)
     {
         // remove all events, close stream, delete this pointer
         ACE_Reactor_Mask m = ACE_Event_Handler::READ_MASK | ACE_Event_Handler::DONT_CALL;
         reactor()->remove_handler(this, m);
         sock_.close();
+        delete hub_;
         delete this;
     }
-
     return 0;
 }
 

@@ -38,6 +38,16 @@ ProtocolHub::ProtocolHub(Participant* client,
     hub_state_ = first_connect_state_;
 }
 
+ProtocolHub::~ProtocolHub()
+{
+    delete first_connect_state_;
+    delete on_pcm_data_state_;
+    delete on_tcp_ready_state_;
+    delete on_wait_result_state_;
+    delete on_http_request_state_;
+    delete on_websocket_state_;
+}
+
 // int ProtocolHub::ProcessRequest(const std::string& buffer)
 int ProtocolHub::ProcessRequest(const char* buf, ssize_t rev)
 {

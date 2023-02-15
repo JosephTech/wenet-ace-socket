@@ -17,6 +17,7 @@ public:
     void Join(Participant* client);
     int Leave(Participant* client);
     void BroadcastMessage(const std::string& message);
+    int Size(){return clients_.size(); }
     int set_current_on_microphone_(Participant* pa);
     Participant* get_current_on_microphone_(){return current_on_microphone_;}
 private:
@@ -42,6 +43,7 @@ public:
     }
     int JoinGroup(string uuid, Participant* pa);
     int JoinNewGroup(Participant* pa);
+    int LeaveGroup(string uuid, Participant* pa);
     std::string GenerateUuid();
 private:
     std::unordered_map<std::string, Group*> uuid_map_ = {};
