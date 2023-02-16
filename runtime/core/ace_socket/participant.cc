@@ -5,13 +5,9 @@
 
 namespace wenet{
 
-Participant::~Participant(){
-        if(hub_) delete hub_;
-    }
-
 int Participant::open()
 {
-    hub_ = new ProtocolHub(this, feature_config_, decode_config_, decode_resource_);
+    hub_ = std::make_shared<ProtocolHub>(this, feature_config_, decode_config_, decode_resource_);
     // ACE_DEBUG((LM_DEBUG, ACE_TEXT("Participant::open() feature_config_ use_count%d.\n"), feature_config_.use_count()));
     // ACE_DEBUG((LM_DEBUG, ACE_TEXT("Participant::open() feature_config_ decode_config_%d.\n"), feature_config_.use_count()));
     // ACE_DEBUG((LM_DEBUG, ACE_TEXT("Participant::open() feature_config_ decode_resource_%d.\n"), feature_config_.use_count()));
@@ -139,18 +135,15 @@ int Participant::handle_close(ACE_HANDLE handle, ACE_Reactor_Mask close_mask)
     // const std::string pcm_data= hub_.get_all_pcm_data_();
     // hub_.get_recorder_().SavePcmFile(pcm_data);
     
-    PLOG(INFO) << "对端关闭，join等待解码结果，坚决不能让程序崩溃";
-    if (hub_)
+    if (nullptr != hub_)
     {
-        PLOG(INFO) << "发送结束信号";
-        PLOG(INFO) << "可能已经发送过了";
         // hub_->OnSpeechEnd();
-        if(hub_ && hub_->get_hub_state_()->get_hub_state_() == kOnPcmData)
+        if(hub_->get_hub_state_()->get_hub_state_() == kOnPcmData)
         {
-            PLOG(INFO) << "对端突然关闭";
+            PLOG(INFO) << "对端突然关闭,join等待解码结果";
             hub_->HandleClose();
         }
-        if(hub_->get_decode_thread_())
+        if(nullptr != hub_->get_decode_thread_())
         {
             hub_->get_decode_thread_()->join();
         }
@@ -163,7 +156,6 @@ int Participant::handle_close(ACE_HANDLE handle, ACE_Reactor_Mask close_mask)
         ACE_Reactor_Mask m = ACE_Event_Handler::READ_MASK | ACE_Event_Handler::DONT_CALL;
         reactor()->remove_handler(this, m);
         sock_.close();
-        delete hub_;
         delete this;
     }
     return 0;

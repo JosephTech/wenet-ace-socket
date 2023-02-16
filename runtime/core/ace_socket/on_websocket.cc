@@ -387,6 +387,7 @@ int OnWebSocket::ParseFrame(const std::string& buffer, WebSocketProtocol& frame)
         // RFC 6455. must have mask.
         PLOG(ERROR) << "RFC 6455. websocket protocol error, message must have mask.";
         protocol_hub_->get_client_()->handle_close(ACE_INVALID_HANDLE, 0);
+        return -1;
     }
 
     frame.payload = buffer.substr(index, frame.payload_len);
@@ -426,12 +427,14 @@ void OnWebSocket::ProcessTextPayload(const std::string& text)
                 {
                     PLOG(ERROR) << "uuid not exist. close socket stream.";
                     protocol_hub_->get_client_()->handle_close(ACE_INVALID_HANDLE, 0);
+                    return;
                 }
             }
             else
             {
                 PLOG(ERROR) << "wrong protocol. close socket stream.";
                 protocol_hub_->get_client_()->handle_close(ACE_INVALID_HANDLE, 0);
+                return;
             }
         }
         else if("on_mic" == signal)
@@ -442,6 +445,7 @@ void OnWebSocket::ProcessTextPayload(const std::string& text)
             {
                 PLOG(ERROR) << "program logic error. client not in group. close socket stream.";
                 protocol_hub_->get_client_()->handle_close(ACE_INVALID_HANDLE, 0);
+                return;
             }
         }
         else if("start" == signal)
@@ -476,6 +480,7 @@ void OnWebSocket::ProcessTextPayload(const std::string& text)
     {
         PLOG(INFO) << ("wrong protocol");
         protocol_hub_->get_client_()->handle_close(ACE_INVALID_HANDLE, 0);
+        return;
     }
 
 }

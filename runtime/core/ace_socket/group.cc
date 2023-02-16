@@ -43,7 +43,9 @@ int GroupManager::LeaveGroup(string uuid, Participant* pa)
         if(0 == uuid_map_[uuid]->Size())
         {
             delete uuid_map_[uuid];
+            uuid_map_[uuid] = nullptr;
         }
+        uuid_map_.erase(uuid);
         return 0;
     }
     // possible peer closed when client didn't get to join group. 

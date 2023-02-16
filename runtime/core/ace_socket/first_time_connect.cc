@@ -44,6 +44,7 @@ void FirstTimeConnect::Execute(const std::string& buffer)
             {
                 PLOG(ERROR) << "send uuid fail. close socket stream.";
                 protocol_hub_->get_client_()->handle_close(ACE_INVALID_HANDLE, 0);
+                return;     // important. access protocol_hub_ cause segment fault
             }
             protocol_hub_->ChangeHubState(kOnTcpReady, buffer);
         }
@@ -51,10 +52,11 @@ void FirstTimeConnect::Execute(const std::string& buffer)
         {
             // "TCPuuid\r\n"  join group
             std::string uuid = buffer.substr(3, 36);
-            if(!GroupManager::Instance().JoinGroup(uuid, protocol_hub_->get_client_()))
+            if(-1 == GroupManager::Instance().JoinGroup(uuid, protocol_hub_->get_client_()))
             {
                 PLOG(ERROR) << "uuid not exist. close socket stream.";
                 protocol_hub_->get_client_()->handle_close(ACE_INVALID_HANDLE, 0);
+                return;
             }
             protocol_hub_->ChangeHubState(kOnTcpReady, buffer);
         }
@@ -62,12 +64,14 @@ void FirstTimeConnect::Execute(const std::string& buffer)
         {
             PLOG(ERROR) << "protocol wrong. close socket stream.";
             protocol_hub_->get_client_()->handle_close(ACE_INVALID_HANDLE, 0);
+            return;
         }
     }
     else
     {
         PLOG(ERROR) << "protocol wrong. close socket stream.";
         protocol_hub_->get_client_()->handle_close(ACE_INVALID_HANDLE, 0);
+        return;
     }
     return;
 }

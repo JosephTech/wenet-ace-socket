@@ -40,6 +40,7 @@ ProtocolHub::ProtocolHub(Participant* client,
 
 ProtocolHub::~ProtocolHub()
 {
+    PLOG(INFO) << "hub_析构..";
     delete first_connect_state_;
     delete on_pcm_data_state_;
     delete on_tcp_ready_state_;
@@ -55,7 +56,7 @@ int ProtocolHub::ProcessRequest(const char* buf, ssize_t rev)
     std::string buffer(buf,rev);
 
     // 处理每次新的buffer，放在Execute, 切换状态时，上个状态剩余数据处理，放在->enter(中)
-    PLOG(INFO) << "hub_state_ is " << hub_state_->get_hub_state_();
+    //PLOG(INFO) << "hub_state_ is " << hub_state_->get_hub_state_();
     hub_state_->Execute(buffer);
 
     // TODO: 状态： on_pcm, 
@@ -220,12 +221,11 @@ void ProtocolHub::OnSpeechStart()
     // hub_state_ = on_pcm_data_state_;
     PLOG(INFO) << "TODO(Joseph):  ProtocolHub::OnSpeechStart()此处需join()线程\n";
     decode_thread_ = std::make_shared<std::thread>(&ProtocolHub::DecodeThreadFunc, this);
-  
 }
 
 void ProtocolHub::HandleClose()
 {
-    if (feature_pipeline_ && hub_state_->get_hub_state_() == kOnPcmData)
+    if (nullptr != feature_pipeline_ && hub_state_->get_hub_state_() == kOnPcmData)
     {
       feature_pipeline_->set_input_finished();
     }

@@ -21,10 +21,10 @@ void OnPcmData::Execute(const std::string& buffer)
         std::string signal;
         signal.push_back(buffer[0]);
 
-        PLOG(INFO) << "uuid is " << uuid;
-        PLOG(INFO) << "signal is " << signal;
         if(uuid == protocol_hub_->get_client_()->get_uuid_())
         {
+            PLOG(INFO) << "uuid is " << uuid;
+            PLOG(INFO) << "signal is " << signal;
             if (signal == "e")
             {
                 PLOG(INFO) << "OnPcmData::Execute() socket结束录音,向decoder发送停止信号, 发送等待解码完成，发送result到客户端\n";
@@ -41,6 +41,7 @@ void OnPcmData::Execute(const std::string& buffer)
                 {
                     PLOG(ERROR) << "program logic error. client not in group. close socket stream.";
                     protocol_hub_->get_client_()->handle_close(ACE_INVALID_HANDLE, 0);
+                    return;
                 }
             }
         }

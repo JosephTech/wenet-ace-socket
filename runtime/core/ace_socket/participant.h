@@ -27,7 +27,7 @@ public:
             feature_config_(std::move(feature_config)),
             decode_config_(std::move(decode_config)),
             decode_resource_(std::move(decode_resource)){}
-    ~Participant();
+    ~Participant(){}
     
     int open();
     int handle_input(ACE_HANDLE handle = ACE_INVALID_HANDLE);
@@ -39,7 +39,7 @@ public:
     ACE_HANDLE get_handle () const
         { return sock_.get_handle (); }
     
-    ProtocolHub* get_hub_(){return hub_; }
+    std::shared_ptr<ProtocolHub> get_hub_(){return hub_; }
     void set_uuid_(std::string uuid){uuid_ = uuid; }
     std::string& get_uuid_(){return uuid_; }
     Group* get_group_(){return group_; }
@@ -59,7 +59,7 @@ private:
     std::shared_ptr<DecodeOptions> decode_config_;
     std::shared_ptr<DecodeResource> decode_resource_;
     std::string uuid_ = "-1";
-    ProtocolHub* hub_ = nullptr;
+    std::shared_ptr<ProtocolHub> hub_ = nullptr;
     Group* group_ = nullptr;
 };
 
