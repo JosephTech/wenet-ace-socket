@@ -36,13 +36,7 @@ void OnPcmData::Execute(const std::string& buffer)
             else if(signal == "o")
             {
                 // on microphone. Grab the microphone.
-                int ret = protocol_hub_->get_client_()->get_group_()->set_current_on_microphone_(protocol_hub_->get_client_());
-                if(-1 == ret)
-                {
-                    PLOG(ERROR) << "program logic error. client not in group. close socket stream.";
-                    protocol_hub_->get_client_()->handle_close(ACE_INVALID_HANDLE, 0);
-                    return;
-                }
+                protocol_hub_->get_client_()->get_group_()->SetGroupLeader(protocol_hub_->get_client_());
             }
         }
         
@@ -55,9 +49,9 @@ void OnPcmData::Execute(const std::string& buffer)
     // only one possible.
     if (protocol_hub_->is_on_websocket_() ^ protocol_hub_->is_on_socket_())
     {
-        if(protocol_hub_->get_client_() != protocol_hub_->get_client_()->get_group_()->get_current_on_microphone_())
+        if(!protocol_hub_->is_group_leader_())
         {
-            // only the client on microphone can talk.
+            // only group leader can talk.
             return;
         }
         // socket/websocket pcm, pure pcm.

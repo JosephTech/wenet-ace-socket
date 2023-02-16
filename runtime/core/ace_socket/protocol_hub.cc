@@ -343,16 +343,7 @@ void ProtocolHub::OnPartialResult(const std::string& result) {
     std::string sendbuf = json::serialize(rv);
     sendbuf += "\r\n";
     PLOG(INFO) << "send buf is " << sendbuf;
-    if(on_socket_)
-    {
-        
-        client_->socket().send(sendbuf.c_str(), sendbuf.length());
-    }
-    else if(on_websocket_ && hub_state_->get_hub_state_() == kOnWebSocket)
-    {
-        on_websocket_state_->SendText(sendbuf);
-    }
-    
+    client_->get_group_()->BroadcastMessage(sendbuf);
 }
 
 void ProtocolHub::OnFinalResult(const std::string& result) {
@@ -367,15 +358,7 @@ void ProtocolHub::OnFinalResult(const std::string& result) {
     sendbuf += "\r\n";
 
     PLOG(INFO) << "send buf is " << sendbuf;
-    if(on_socket_)
-    {
-        
-        client_->socket().send(sendbuf.c_str(), sendbuf.length());
-    }
-    else if(on_websocket_ && hub_state_->get_hub_state_() == kOnWebSocket)
-    {
-        on_websocket_state_->SendText(sendbuf);
-    }
+    client_->get_group_()->BroadcastMessage(sendbuf);
 }
 
 void ProtocolHub::OnFinish() {
@@ -388,15 +371,7 @@ void ProtocolHub::OnFinish() {
 
     PLOG(INFO) << "send buf is " << sendbuf;
     // client_->handle_close(ACE_INVALID_HANDLE, 0);  // 如果服务器主动关闭，客户端将收不到这条消息
-    if(on_socket_)
-    {
-        
-        client_->socket().send(sendbuf.c_str(), sendbuf.length());
-    }
-    else if(on_websocket_ && hub_state_->get_hub_state_() == kOnWebSocket)
-    {
-        on_websocket_state_->SendText(sendbuf);
-    }
+    client_->get_group_()->BroadcastMessage(sendbuf);
 }
 
 std::string ProtocolHub::SerializeResult(bool finish) 

@@ -14,9 +14,11 @@ int GroupManager::JoinGroup(string uuid, Participant* pa)
 {
     if(uuid_map_.count(uuid))
     {
+        PLOG(INFO) << "client join uuid is" <<  uuid;
         // multiple clients
         uuid_map_[uuid]->Join(pa);
         pa->set_uuid_(uuid);
+        pa->get_hub_()->set_group_leader_(false);
         return 0;
     }
     return -1;
@@ -29,9 +31,11 @@ int GroupManager::JoinNewGroup(Participant* pa)
     Group* group = new Group();
     group->Join(pa);
     // on microphone. First join client grab the microphone default.
-    group->set_current_on_microphone_(pa);
+    group->SetGroupLeader(pa);
     uuid_map_.insert({uuid, group});
+    PLOG(INFO) << "client join uuid is" <<  uuid;
     pa->set_uuid_(uuid);
+    pa->get_hub_()->set_group_leader_(true);
     return 0;
 }
 
@@ -60,17 +64,20 @@ std::string GroupManager::GenerateUuid()
     return boost::uuids::to_string(id);
 }
 
-int Group::set_current_on_microphone_(Participant* pa)
+int Group::SetGroupLeader(Participant* pa)
 {
     for(auto c : clients_)
     {
         if(c == pa)
         {
-            current_on_microphone_ = pa;
-            return 0;
-        } 
+            pa->get_hub_()->set_group_leader_(true);
+        }
+        else
+        {
+            pa->get_hub_()->set_group_leader_(false);
+        }
     }
-    return -1;
+    return 0;
 }
 
 void Group::Join(Participant* client){
@@ -91,10 +98,22 @@ int Group::Leave(Participant* client){
     return -1;
 }
 
+//
+//  send decode results
+//
 void Group::BroadcastMessage(const std::string& message){
+    PLOG(INFO) << "clients_.size()"<< clients_.size();
     for(auto cl : clients_)
     {
-        PLOG(INFO) << "此处需要通过client的socket() send()向所有客户端广播消息";
+        PLOG(INFO) << "此处需要通过client的socket()/websocket send()向所有客户端广播消息";
+        if(cl->get_hub_()->is_on_socket_())
+        {
+            cl->socket().send(message.c_str(), message.length());
+        }
+        else if(cl->get_hub_()->is_on_websocket_() && cl->get_hub_()->get_hub_state_()->get_hub_state_() == kOnWebSocket)
+        {
+            cl->get_hub_()->get_on_websocket_state_()->SendText(message);
+        }
     }
 }
 

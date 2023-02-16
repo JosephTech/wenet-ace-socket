@@ -18,11 +18,9 @@ public:
     int Leave(Participant* client);
     void BroadcastMessage(const std::string& message);
     int Size(){return clients_.size(); }
-    int set_current_on_microphone_(Participant* pa);
-    Participant* get_current_on_microphone_(){return current_on_microphone_;}
+    int SetGroupLeader(Participant* pa);
 private:
     std::vector<Participant*> clients_;
-    Participant* current_on_microphone_ = nullptr;          // which client use mic now.
 };
 
 //

@@ -46,7 +46,7 @@ void FirstTimeConnect::Execute(const std::string& buffer)
                 protocol_hub_->get_client_()->handle_close(ACE_INVALID_HANDLE, 0);
                 return;     // important. access protocol_hub_ cause segment fault
             }
-            protocol_hub_->ChangeHubState(kOnTcpReady, buffer);
+            protocol_hub_->ChangeHubState(kOnTcpReady, "");
         }
         else if(tcp_uuid_len == pos)
         {
@@ -58,7 +58,14 @@ void FirstTimeConnect::Execute(const std::string& buffer)
                 protocol_hub_->get_client_()->handle_close(ACE_INVALID_HANDLE, 0);
                 return;
             }
-            protocol_hub_->ChangeHubState(kOnTcpReady, buffer);
+            //PLOG(INFO) << "buffer is " << buffer;
+            std::string remain_buf = "";
+            if(buffer.length() > pos+2)
+            {
+                //                          "\r\n"
+                remain_buf = buffer.substr(pos+2);
+            }
+            protocol_hub_->ChangeHubState(kOnTcpReady, remain_buf);
         }
         else
         {
