@@ -128,7 +128,6 @@ int Participant::handle_input(ACE_HANDLE handle)
 // }
 int Participant::handle_close(ACE_HANDLE handle, ACE_Reactor_Mask close_mask)
 {
-    PLOG(INFO) << "需要将自己从Group里边移除，将Group从GroupManager里移除";
     ACE_DEBUG((LM_DEBUG, ACE_TEXT("Participant::handle_close()被调用..\n")));
 
     // SavePcmFile();
@@ -138,18 +137,16 @@ int Participant::handle_close(ACE_HANDLE handle, ACE_Reactor_Mask close_mask)
     if (nullptr != hub_)
     {
         // hub_->OnSpeechEnd();
-        if(hub_->get_hub_state_()->get_hub_state_() == kOnPcmData)
-        {
-            PLOG(INFO) << "对端突然关闭,join等待解码结果";
-            hub_->HandleClose();
-        }
+        PLOG(INFO) << "对端突然关闭,join等待解码结果";
+        hub_->HandleClose();
         if(nullptr != hub_->get_decode_thread_())
         {
+            ACE_DEBUG((LM_DEBUG, ACE_TEXT("handle_close()这里阻塞，导致收不到事件,join 线程..\n")));
             hub_->get_decode_thread_()->join();
         }
     }
+    ACE_DEBUG((LM_DEBUG, ACE_TEXT("handle_close()这里阻塞，导致收不到事件LeaveGroup..\n")));
     GroupManager::Instance().LeaveGroup(uuid_, this);
-    // if(hub_ && hub_->get_record_pcm_()) hub_->SavePcmFile();
     if(sock_.get_handle() != ACE_INVALID_HANDLE)
     {
         // remove all events, close stream, delete this pointer
@@ -158,6 +155,7 @@ int Participant::handle_close(ACE_HANDLE handle, ACE_Reactor_Mask close_mask)
         sock_.close();
         delete this;
     }
+    ACE_DEBUG((LM_DEBUG, ACE_TEXT("handle_close()这里阻塞，导致收不到事件..\n")));
     return 0;
 }
 

@@ -70,6 +70,7 @@ int Group::SetGroupLeader(Participant* pa)
     {
         if(c == pa)
         {
+            PLOG(INFO) << "set group leader."<<pa->get_hub_()->get_hub_state_()->get_hub_state_();
             pa->get_hub_()->set_group_leader_(true);
         }
         else
