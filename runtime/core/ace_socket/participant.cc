@@ -133,7 +133,9 @@ int Participant::handle_close(ACE_HANDLE handle, ACE_Reactor_Mask close_mask)
     // SavePcmFile();
     // const std::string pcm_data= hub_.get_all_pcm_data_();
     // hub_.get_recorder_().SavePcmFile(pcm_data);
-    
+    ACE_DEBUG((LM_DEBUG, ACE_TEXT("handle_close()这里阻塞，导致收不到事件LeaveGroup..\n")));
+    GroupManager::Instance().LeaveGroup(uuid_, this);
+
     if (nullptr != hub_)
     {
         // hub_->OnSpeechEnd();
@@ -145,8 +147,7 @@ int Participant::handle_close(ACE_HANDLE handle, ACE_Reactor_Mask close_mask)
             hub_->get_decode_thread_()->join();
         }
     }
-    ACE_DEBUG((LM_DEBUG, ACE_TEXT("handle_close()这里阻塞，导致收不到事件LeaveGroup..\n")));
-    GroupManager::Instance().LeaveGroup(uuid_, this);
+    
     if(sock_.get_handle() != ACE_INVALID_HANDLE)
     {
         // remove all events, close stream, delete this pointer

@@ -89,51 +89,55 @@ void OnWebSocket::Execute(const std::string& buf)
 {
     // all buffer is raw pcm data.
     // pcm_processor_->Execute(buffer);
-    string buffer = remain_buffer_ + buf;
+    remain_buffer_ += buf;
     //PLOG(INFO) << "TODO(Joseph): wrapping websocket code ";
-    WebSocketProtocol frame;
-    int ret = ParseFrame(buffer, frame);
-    if(buffer.length() > ret)
+    bool flag = true;
+    while(flag)
     {
-        PLOG(INFO) << "剩余有" << buffer.length() - ret;
-        remain_buffer_ = buffer.substr(ret);
-    }
-    else
-    {
-        remain_buffer_ = "";
-    }
+        WebSocketProtocol frame;
+        int ret = ParseFrame(remain_buffer_, frame);
+        if(remain_buffer_.length() > ret)
+        {
+            PLOG(INFO) << "剩余有" << remain_buffer_.length() - ret;
+            remain_buffer_ = remain_buffer_.substr(ret);
+        }
+        else
+        {
+            flag = false;
+            remain_buffer_ = "";
+        }
 
-    //PLOG(INFO) << "fin is "<< (int)frame.fin;
-    // PLOG(INFO) << "opcode is " << (int)frame.opcode
-    switch(frame.opcode)
-    {
-    case 0x0:
-        // continuation frame
-        break;
-    case 0x1:
-        // text frame
-        PLOG(INFO) << "TODO(Joseph): process websocket start signal";
-        ProcessTextPayload(frame.payload);
-        break;
-    case 0x2:
-        // binary frame
-        //ProcessBinaryPayload();
-        //PLOG(INFO) << "websocket receive pcm data: " << frame.payload; 
-        //PLOG(INFO) << "TODO(Joseph): process websocket pcm data";
-        pcm_processor_->Execute(frame.payload);
-        break;
-    case 0x8:
-        // connection close
-        protocol_hub_->get_client_()->handle_close(ACE_INVALID_HANDLE, 0);
-        break;
-    case 0x9:
-        // ping frame
-        break;
-    case 0xA:
-        // pong frame
-        break;
+        //PLOG(INFO) << "fin is "<< (int)frame.fin;
+        // PLOG(INFO) << "opcode is " << (int)frame.opcode
+        switch(frame.opcode)
+        {
+        case 0x0:
+            // continuation frame
+            break;
+        case 0x1:
+            // text frame
+            PLOG(INFO) << "TODO(Joseph): process websocket start signal";
+            ProcessTextPayload(frame.payload);
+            break;
+        case 0x2:
+            // binary frame
+            //ProcessBinaryPayload();
+            //PLOG(INFO) << "websocket receive pcm data: " << frame.payload; 
+            //PLOG(INFO) << "TODO(Joseph): process websocket pcm data";
+            pcm_processor_->Execute(frame.payload);
+            break;
+        case 0x8:
+            // connection close
+            protocol_hub_->get_client_()->handle_close(ACE_INVALID_HANDLE, 0);
+            break;
+        case 0x9:
+            // ping frame
+            break;
+        case 0xA:
+            // pong frame
+            break;
+        }
     }
-    
 }
 
 int OnWebSocket::SendText(const std::string& text)
@@ -410,7 +414,7 @@ void OnWebSocket::ProcessTextPayload(const std::string& text)
         if("new_group" == signal)
         {
             GroupManager::Instance().JoinNewGroup(protocol_hub_->get_client_());
-            json::value rv = {"uuid", protocol_hub_->get_client_()->get_uuid_().c_str()};
+            json::value rv = {{"type", "uuid"},{"uuid", protocol_hub_->get_client_()->get_uuid_().c_str()}};
             std::string response = json::serialize(rv);
             SendText(response);
         }

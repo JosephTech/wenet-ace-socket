@@ -14,13 +14,13 @@ class Participant;
 //
 class Group{
 public:
-    void Join(Participant* client);
-    int Leave(Participant* client);
+    void Join(Participant* cl);
+    int Leave(Participant* cl);
     void BroadcastMessage(const std::string& message);
     int Size(){return clients_.size(); }
     int SetGroupLeader(Participant* pa);
 private:
-    std::vector<Participant*> clients_;
+    std::set<Participant*> clients_;
 };
 
 //

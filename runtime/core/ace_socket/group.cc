@@ -48,8 +48,8 @@ int GroupManager::LeaveGroup(string uuid, Participant* pa)
         {
             delete uuid_map_[uuid];
             uuid_map_[uuid] = nullptr;
+            uuid_map_.erase(uuid);
         }
-        uuid_map_.erase(uuid);
         return 0;
     }
     // possible peer closed when client didn't get to join group. 
@@ -81,20 +81,18 @@ int Group::SetGroupLeader(Participant* pa)
     return 0;
 }
 
-void Group::Join(Participant* client){
-    clients_.push_back(client);
-    client->set_group_(this);
+void Group::Join(Participant* cl){
+    clients_.insert(cl);
+    cl->set_group_(this);
 }
 
-int Group::Leave(Participant* client){
-    for(auto iter = clients_.begin(); iter != clients_.end(); ++iter)
+int Group::Leave(Participant* cl){
+    if(clients_.count(cl))
     {
-        if (*iter == client)
-        {
-            clients_.erase(iter);   // Participant handle_close() delete client*.
-            printf("INFO remove client %p", client);
-            return 0;
-        }
+        PLOG(INFO) << "remove client" << cl;
+        cl->set_group_(nullptr);
+        clients_.erase(cl);   // Participant handle_close() delete client*.
+        return 0;
     }
     return -1;
 }

@@ -346,7 +346,11 @@ void ProtocolHub::OnPartialResult(const std::string& result) {
     std::string sendbuf = json::serialize(rv);
     sendbuf += "\r\n";
     //PLOG(INFO) << "send buf is " << sendbuf;
-    client_->get_group_()->BroadcastMessage(sendbuf);
+    if(nullptr != client_->get_group_())
+    {
+        client_->get_group_()->BroadcastMessage(sendbuf);
+    }
+    
 }
 
 void ProtocolHub::OnFinalResult(const std::string& result) {
@@ -361,7 +365,10 @@ void ProtocolHub::OnFinalResult(const std::string& result) {
     sendbuf += "\r\n";
 
     //PLOG(INFO) << "send buf is " << sendbuf;
-    client_->get_group_()->BroadcastMessage(sendbuf);
+    if(nullptr != client_->get_group_())
+    {
+        client_->get_group_()->BroadcastMessage(sendbuf);
+    }
 }
 
 void ProtocolHub::OnFinish() {
@@ -374,7 +381,10 @@ void ProtocolHub::OnFinish() {
 
     //PLOG(INFO) << "send buf is " << sendbuf;
     // client_->handle_close(ACE_INVALID_HANDLE, 0);  // 如果服务器主动关闭，客户端将收不到这条消息
-    client_->get_group_()->BroadcastMessage(sendbuf);
+    if(nullptr != client_->get_group_())
+    {
+        client_->get_group_()->BroadcastMessage(sendbuf);
+    }
 }
 
 std::string ProtocolHub::SerializeResult(bool finish) 
