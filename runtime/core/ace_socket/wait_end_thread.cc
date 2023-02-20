@@ -1,10 +1,10 @@
 #include "ace_socket/participant.h"
-#include "ace_socket/wait_end_threads.h"
+#include "ace_socket/wait_end_thread.h"
 
 
 namespace wenet{
 
-void WaitEndThreads::Update()
+void WaitEndThread::Update()
 {
     while(true)
     {
@@ -14,14 +14,14 @@ void WaitEndThreads::Update()
     
 }
 
-void WaitEndThreads::Add(Participant* cl)
+void WaitEndThread::Add(Participant* cl)
 {
     std::lock_guard<std::mutex> guard(mutex_);
     clients_.insert(cl); 
     PLOG(INFO) << "wait_end_threads add new client. wait_end_threads.size():" << clients_.size();
 }
 
-void WaitEndThreads::Check()
+void WaitEndThread::Check()
 {
     //PLOG(INFO) << "Check() wait_end_threads.size():" << clients_.size();
     std::lock_guard<std::mutex> guard(mutex_);

@@ -30,7 +30,6 @@ private:
 class GroupManager{
 private:
     GroupManager(){
-        // wait_end_threads_ = make_shared<WaitEndThreads>();
     }
     ~GroupManager(){}
     // GroupManager(const GroupManager&);
@@ -43,12 +42,9 @@ public:
     int JoinGroup(string uuid, Participant* pa);
     int JoinNewGroup(Participant* pa);
     int LeaveGroup(string uuid, Participant* pa);
-    // void JoinWaitEndThreads_(Participant* pa){wait_end_threads_.Add(pa);}
-    // std::shared_ptr<WaitEndThreads> get_wait_end_threads_(){return wait_end_threads_; }
     std::string GenerateUuid();
 private:
     std::unordered_map<std::string, Group*> uuid_map_ = {};
-    // std::shared_ptr<WaitEndThreads> wait_end_threads_;
 };
 
 

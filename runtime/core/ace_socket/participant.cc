@@ -136,7 +136,7 @@ int Participant::handle_close(ACE_HANDLE handle, ACE_Reactor_Mask close_mask)
         {
             hub_->HandleClose();
         }
-        WaitEndThreads::Instance().Add(this);
+        WaitEndThread::Instance().Add(this);
         return 0;
     }
 

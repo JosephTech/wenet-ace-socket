@@ -10,7 +10,7 @@
 
 #include "ace_socket/protocol_hub.h"
 #include "ace_socket/group.h"
-#include "ace_socket/wait_end_threads.h"
+#include "ace_socket/wait_end_thread.h"
 // class ProtocolHub;
 
 #define MAX_BUF_LEN (64*1024) 
