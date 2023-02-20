@@ -10,6 +10,7 @@
 
 #include "ace_socket/protocol_hub.h"
 #include "ace_socket/group.h"
+#include "ace_socket/wait_end_threads.h"
 // class ProtocolHub;
 
 #define MAX_BUF_LEN (64*1024) 
@@ -44,6 +45,8 @@ public:
     std::string& get_uuid_(){return uuid_; }
     Group* get_group_(){return group_; }
     void set_group_(Group* gp){group_ = gp; }
+    void set_decode_thread_finish_(){decode_thread_finish_ = true; }
+    bool is_decode_thread_finish_(){return decode_thread_finish_; }
 
 // private:
 //     int SavePcmFile();
@@ -61,10 +64,9 @@ private:
     std::string uuid_ = "-1";
     std::shared_ptr<ProtocolHub> hub_ = nullptr;
     Group* group_ = nullptr;
+    bool decode_thread_finish_ = false;
 };
 
 } // namespace wenet
 
 #endif /* PARTICIPANT_H_ */
-
-#define PROTOCOL_POS 9

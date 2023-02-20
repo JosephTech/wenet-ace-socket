@@ -129,6 +129,16 @@ int Participant::handle_input(ACE_HANDLE handle)
 int Participant::handle_close(ACE_HANDLE handle, ACE_Reactor_Mask close_mask)
 {
     ACE_DEBUG((LM_DEBUG, ACE_TEXT("Participant::handle_close()被调用..\n")));
+    // Blocking prevention
+    if (!decode_thread_finish_)
+    {
+        if(hub_)
+        {
+            hub_->HandleClose();
+        }
+        WaitEndThreads::Instance().Add(this);
+        return 0;
+    }
 
     // SavePcmFile();
     // const std::string pcm_data= hub_.get_all_pcm_data_();
@@ -136,16 +146,12 @@ int Participant::handle_close(ACE_HANDLE handle, ACE_Reactor_Mask close_mask)
     ACE_DEBUG((LM_DEBUG, ACE_TEXT("handle_close()这里阻塞，导致收不到事件LeaveGroup..\n")));
     GroupManager::Instance().LeaveGroup(uuid_, this);
 
-    if (nullptr != hub_)
+    // hub_->OnSpeechEnd();
+    PLOG(INFO) << "对端突然关闭,join等待解码结果";
+    if(hub_ && hub_->get_decode_thread_())
     {
-        // hub_->OnSpeechEnd();
-        PLOG(INFO) << "对端突然关闭,join等待解码结果";
-        hub_->HandleClose();
-        if(nullptr != hub_->get_decode_thread_())
-        {
-            ACE_DEBUG((LM_DEBUG, ACE_TEXT("handle_close()这里阻塞，导致收不到事件,join 线程..\n")));
-            hub_->get_decode_thread_()->join();
-        }
+        ACE_DEBUG((LM_DEBUG, ACE_TEXT("handle_close()这里阻塞，导致收不到事件,join 线程..\n")));
+        hub_->get_decode_thread_()->join();
     }
     
     if(sock_.get_handle() != ACE_INVALID_HANDLE)

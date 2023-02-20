@@ -379,6 +379,7 @@ void ProtocolHub::OnFinish() {
     std::string sendbuf = json::serialize(rv);
     sendbuf += "\r\n";
 
+    client_->set_decode_thread_finish_();
     //PLOG(INFO) << "send buf is " << sendbuf;
     // client_->handle_close(ACE_INVALID_HANDLE, 0);  // 如果服务器主动关闭，客户端将收不到这条消息
     if(nullptr != client_->get_group_())
