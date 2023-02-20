@@ -18,7 +18,7 @@ endif()
 
 if(ACE_SOCKET)
   add_executable(ace_socket_server_main ace_socket_server_main.cc)
-  target_link_libraries(ace_socket_server_main PUBLIC ace_socket)
+  target_link_libraries(ace_socket_server_main PUBLIC ace_socket pthread)
 endif()
 
 if(GRPC)
